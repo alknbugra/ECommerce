@@ -1,0 +1,56 @@
+using ECommerce.Domain.Interfaces;
+using ECommerce.Infrastructure.Data;
+using ECommerce.Infrastructure.Repositories;
+using ECommerce.Infrastructure.Services;
+using ECommerce.Application.Common.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace ECommerce.Infrastructure;
+
+/// <summary>
+/// Infrastructure katmanı için dependency injection yapılandırması
+/// </summary>
+public static class DependencyInjection
+{
+    /// <summary>
+    /// Infrastructure servislerini ekle
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="configuration">Configuration</param>
+    /// <returns>Service collection</returns>
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Entity Framework Core ekle
+        services.AddDbContext<ECommerceDbContext>(options =>
+        {
+            options.UseSqlServer(
+                configuration.GetConnectionString("DefaultConnection"),
+                b => b.MigrationsAssembly(typeof(ECommerceDbContext).Assembly.FullName));
+        });
+
+        // Repository'leri ekle
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
+        services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
+
+        // JWT Service'i ekle
+        services.AddScoped<IJwtService, JwtService>();
+
+        // Password Service'i ekle
+        services.AddScoped<IPasswordService, PasswordService>();
+
+        // File Upload Service'i ekle
+        services.AddScoped<IFileUploadService, FileUploadService>();
+
+        // Cache Service'i ekle
+        services.AddMemoryCache();
+        services.AddScoped<ICacheService, CacheService>();
+
+        // Seed Data Service'i ekle
+        services.AddHostedService<SeedDataService>();
+
+        return services;
+    }
+}
