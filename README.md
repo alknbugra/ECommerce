@@ -26,6 +26,13 @@ Modern, ölçeklenebilir ve güvenli bir e-ticaret API'si. Clean Architecture, C
 - **Password Hashing** (PBKDF2 + SHA256)
 - **Email/Phone Verification** - E-posta ve telefon doğrulama
 - **Account Lockout** - Başarısız giriş denemesi koruması
+- **API Rate Limiting** - DDoS ve brute force koruması (AspNetCoreRateLimit)
+- **CORS Security** - Güvenli cross-origin istekleri
+- **Input Validation Middleware** - XSS ve injection koruması
+- **Security Headers Middleware** - CSP, HSTS ve diğer güvenlik başlıkları
+- **Request Validation** - JSON format doğrulama ve tehlikeli içerik tespiti
+- **IP-based Rate Limiting** - IP adresine göre istek sınırlama
+- **Endpoint-specific Limits** - Endpoint bazında özel rate limit kuralları
 
 ### 🛍️ E-Ticaret Özellikleri
 
@@ -86,6 +93,9 @@ Modern, ölçeklenebilir ve güvenli bir e-ticaret API'si. Clean Architecture, C
 - **BCrypt** - Şifre hashleme
 - **FluentValidation 12.0** - Veri doğrulama
 - **Role-based Authorization** - Yetkilendirme
+- **AspNetCoreRateLimit 5.0** - API rate limiting
+- **Input Validation Middleware** - XSS ve injection koruması
+- **Security Headers Middleware** - Güvenlik başlıkları
 
 ### Payment & External Services
 
@@ -100,6 +110,9 @@ Modern, ölçeklenebilir ve güvenli bir e-ticaret API'si. Clean Architecture, C
 - **OpenSearch 2.11** - Log aggregation
 - **OpenSearch Dashboard** - Log visualization
 - **Health Checks** - Sistem durumu kontrolü
+- **Enhanced OpenTelemetry** - Gelişmiş distributed tracing
+- **Structured Logging** - JSON formatında loglar
+- **Performance Monitoring** - Request/response süre takibi
 
 ### Caching & Performance
 
@@ -158,8 +171,8 @@ ECommerce/
     ├── Endpoints/          # API endpoints (15+ endpoint groups)
     ├── Hubs/              # SignalR hubs
     ├── Common/            # Shared API logic
-    │   ├── Extensions/    # Extension methods
-    │   ├── Middleware/    # Custom middleware
+    │   ├── Extensions/    # Extension methods (RateLimiting, etc.)
+    │   ├── Middleware/    # Custom middleware (Security, Validation)
     │   └── ProblemDetails/ # Error handling
     └── Properties/        # Launch settings
 ```
@@ -612,6 +625,66 @@ dotnet test
 dotnet test --collect:"XPlat Code Coverage"
 ```
 
+### Rate Limiting Testleri
+
+#### PowerShell ile Rate Limiting Testi
+
+```powershell
+# Rate limiting test script'ini çalıştır
+.\test_rate_limiting.ps1
+```
+
+Bu script aşağıdaki testleri gerçekleştirir:
+
+- Health check testi
+- Rate limiting testi (10 istek)
+- Auth login rate limiting testi
+- Input validation testi (XSS koruması)
+- Security headers kontrolü
+
+#### VS Code Postman Extension ile Test
+
+1. VS Code'da Postman extension'ını yükleyin
+2. [VS_Code_Postman_Setup.md](VS_Code_Postman_Setup.md) dosyasındaki adımları takip edin
+3. Collection'ı çalıştırarak rate limiting testlerini gerçekleştirin
+
+#### Manuel Test Örnekleri
+
+```bash
+# Rate limiting testi - 10 ardışık istek
+for i in {1..10}; do
+  curl -X GET "https://localhost:7047/health"
+  echo "Request $i completed"
+done
+
+# Auth rate limiting testi
+for i in {1..6}; do
+  curl -X POST "https://localhost:7047/api/auth/login" \
+    -H "Content-Type: application/json" \
+    -d '{"email":"test@example.com","password":"WrongPassword123!"}'
+  echo "Auth request $i completed"
+done
+
+# XSS koruması testi
+curl -X POST "https://localhost:7047/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"<script>alert(\"xss\")</script>Password123!"}'
+```
+
+### Security Headers Testi
+
+```bash
+# Security headers kontrolü
+curl -I "https://localhost:7047/health"
+
+# Beklenen headers:
+# X-Content-Type-Options: nosniff
+# X-Frame-Options: DENY
+# X-XSS-Protection: 1; mode=block
+# Content-Security-Policy: default-src 'self'...
+# Referrer-Policy: strict-origin-when-cross-origin
+```
+
 ## 📊 Monitoring ve Logging
 
 ### Health Checks
@@ -702,23 +775,51 @@ Tüm loglar JSON formatında OpenSearch'e gönderilir:
     "ServiceName": "ECommerce.API",
     "ServiceVersion": "1.0.0",
     "ServiceNamespace": "ECommerce",
+    "OtlpEndpoint": null,
     "EnableConsoleExporter": true,
     "EnableAspNetCoreInstrumentation": true,
     "EnableEntityFrameworkCoreInstrumentation": true,
     "EnableHttpClientInstrumentation": true,
-    "SamplingRatio": 1.0
+    "EnableSqlClientInstrumentation": true,
+    "SamplingRatio": 1.0,
+    "MaxActivitiesPerSecond": 1000,
+    "MaxEventsPerActivity": 100,
+    "MaxLinksPerActivity": 100,
+    "MaxAttributesPerActivity": 1000
   },
   "OpenSearch": {
     "Enabled": true,
     "NodeUris": ["http://localhost:9200"],
     "IndexFormat": "ecommerce-logs-{0:yyyy.MM.dd}",
     "IndexTemplateName": "ecommerce-logs-template",
+    "Username": null,
+    "Password": null,
+    "ApiKey": null,
+    "CertificateFingerprint": null,
+    "VerifySsl": true,
+    "ConnectionTimeoutSeconds": 30,
+    "RequestTimeoutSeconds": 60,
+    "BatchSize": 1000,
+    "BatchPostingIntervalSeconds": 2,
+    "QueueSizeLimit": 10000,
     "AutoRegisterTemplate": true,
+    "TemplateLifetimeDays": 30,
     "NumberOfShards": 1,
     "NumberOfReplicas": 0,
     "IndexRefreshInterval": "5s",
     "EnableIndexLifecycleManagement": true,
-    "IndexRetentionDays": 30
+    "IndexRetentionDays": 30,
+    "BufferSizeMB": 10,
+    "FlushIntervalSeconds": 5,
+    "RetryCount": 3,
+    "RetryDelaySeconds": 1,
+    "EnableDeadLetterQueue": true,
+    "DeadLetterQueuePath": "logs/dead-letter-queue",
+    "CustomFields": {
+      "Application": "ECommerce.API",
+      "Environment": "Development",
+      "Version": "1.0.0"
+    }
   },
   "PaymentGateway": {
     "Iyzico": {
@@ -740,6 +841,55 @@ Tüm loglar JSON formatında OpenSearch'e gönderilir:
       "Email": "noreply@yourapp.com",
       "Name": "E-Commerce"
     }
+  },
+  "RateLimiting": {
+    "EnableRateLimiting": true,
+    "GeneralRules": [
+      {
+        "Endpoint": "*",
+        "Period": "1m",
+        "Limit": 100
+      },
+      {
+        "Endpoint": "*",
+        "Period": "1h",
+        "Limit": 1000
+      }
+    ],
+    "AuthRules": [
+      {
+        "Endpoint": "POST:/api/auth/login",
+        "Period": "1m",
+        "Limit": 5
+      },
+      {
+        "Endpoint": "POST:/api/auth/register",
+        "Period": "1m",
+        "Limit": 3
+      },
+      {
+        "Endpoint": "POST:/api/auth/forgot-password",
+        "Period": "1h",
+        "Limit": 3
+      }
+    ],
+    "ApiRules": [
+      {
+        "Endpoint": "POST:/api/products",
+        "Period": "1m",
+        "Limit": 10
+      },
+      {
+        "Endpoint": "PUT:/api/products/*",
+        "Period": "1m",
+        "Limit": 10
+      },
+      {
+        "Endpoint": "DELETE:/api/products/*",
+        "Period": "1m",
+        "Limit": 5
+      }
+    ]
   }
 }
 ```
@@ -831,8 +981,12 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 - [x] OpenSearch entegrasyonu
 - [x] Gelişmiş logging ve monitoring
 - [x] Real-time notifications (SignalR)
+- [x] API rate limiting ve güvenlik özellikleri
+- [x] Input validation middleware (XSS koruması)
+- [x] Security headers middleware (CSP, HSTS)
+- [x] Enhanced OpenTelemetry entegrasyonu
+- [x] Gelişmiş OpenSearch yapılandırması
 - [ ] Advanced search (Elasticsearch)
-- [ ] API rate limiting
 - [ ] Multi-language support
 - [ ] Mobile API optimizations
 - [ ] GraphQL endpoint
@@ -857,6 +1011,9 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 - **v1.9.0** - Stok yönetimi ve envanter takibi
 - **v2.0.0** - Gelişmiş logging, monitoring ve OpenTelemetry
 - **v2.1.0** - Real-time notifications ve SignalR hub
+- **v2.2.0** - API Rate Limiting ve güvenlik özellikleri
+- **v2.3.0** - Input validation middleware ve security headers
+- **v2.4.0** - Enhanced OpenTelemetry ve OpenSearch yapılandırması
 
 ### Proje İstatistikleri
 
@@ -866,10 +1023,11 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 - **16+ API Endpoint Groups** - RESTful API'ler
 - **17+ Enums** - Domain enum'ları
 - **6+ External Services** - Harici servis entegrasyonları
+- **3+ Security Middleware** - Güvenlik katmanları
 - **100% Async/Await** - Asenkron programlama
 - **Clean Architecture** - Katmanlı mimari
 - **SOLID Principles** - Temiz kod prensipleri
 
 ---
 
-**Son güncelleme**: 2025-01-14
+**Son güncelleme**: 2025-10-14

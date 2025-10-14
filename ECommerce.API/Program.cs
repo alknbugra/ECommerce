@@ -105,14 +105,39 @@ builder.Services.AddAuthorization();
 // Add SignalR
 builder.Services.AddSignalR();
 
+// Add Rate Limiting
+builder.Services.AddRateLimiting(builder.Configuration);
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    // Development ortamı için güvenli CORS
+    options.AddPolicy("Development", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "https://localhost:3000", "https://localhost:3001")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials()
+              .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
+    });
+
+    // Production ortamı için güvenli CORS
+    options.AddPolicy("Production", policy =>
+    {
+        policy.WithOrigins("https://yourdomain.com", "https://www.yourdomain.com")
+              .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-Requested-With")
+              .AllowCredentials()
+              .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
+    });
+
+    // API için özel CORS (Swagger ve diğer API araçları)
+    options.AddPolicy("Api", policy =>
+    {
+        policy.WithOrigins("https://localhost:7047", "http://localhost:5000")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -130,7 +155,25 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+
+// CORS'u ortama göre yapılandır
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("Development");
+}
+else
+{
+    app.UseCors("Production");
+}
+
+// Rate Limiting middleware
+app.UseRateLimiting();
+
+// Input Validation middleware
+app.UseMiddleware<ECommerce.API.Common.Middleware.InputValidationMiddleware>();
+
+// Security Headers middleware
+app.UseMiddleware<ECommerce.API.Common.Middleware.SecurityHeadersMiddleware>();
 
 // Logging middleware'leri
 app.UseRequestLogging();
