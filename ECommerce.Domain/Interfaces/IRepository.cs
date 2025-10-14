@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Domain.Interfaces;
 
@@ -20,6 +21,12 @@ public interface IRepository<T> where T : class
     /// </summary>
     /// <returns>Entity listesi</returns>
     Task<IEnumerable<T>> GetAllAsync();
+
+    /// <summary>
+    /// Tüm entity'leri IQueryable olarak getir
+    /// </summary>
+    /// <returns>IQueryable entity'ler</returns>
+    IQueryable<T> GetAll();
 
     /// <summary>
     /// Koşula göre entity'leri getir

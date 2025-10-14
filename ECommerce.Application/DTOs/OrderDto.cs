@@ -26,6 +26,11 @@ public class OrderDto
     public string UserName { get; set; } = string.Empty;
 
     /// <summary>
+    /// Kullanıcı email adresi
+    /// </summary>
+    public string? UserEmail { get; set; }
+
+    /// <summary>
     /// Sipariş durumu
     /// </summary>
     public string Status { get; set; } = string.Empty;
@@ -84,6 +89,11 @@ public class OrderDto
     /// Sipariş tarihi
     /// </summary>
     public DateTime OrderDate { get; set; }
+
+    /// <summary>
+    /// Oluşturulma tarihi
+    /// </summary>
+    public DateTime CreatedAt { get; set; }
 
     /// <summary>
     /// Gönderim tarihi

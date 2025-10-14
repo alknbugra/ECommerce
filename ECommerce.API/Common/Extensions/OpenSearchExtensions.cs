@@ -41,7 +41,7 @@ public static class OpenSearchExtensions
                 TemplateName = openSearchConfig.IndexTemplateName,
                 NumberOfShards = openSearchConfig.NumberOfShards,
                 NumberOfReplicas = openSearchConfig.NumberOfReplicas,
-                MinimumLogEventLevel = LogEventLevel.Information,
+                MinimumLogEventLevel = LogEventLevel.Debug, // Tüm log seviyelerini yakala
                 EmitEventFailure = EmitEventFailureHandling.WriteToSelfLog,
                 FailureCallback = e => Console.WriteLine($"OpenSearch sink failure: {e}"),
                 DeadLetterIndexName = "ecommerce-logs-deadletter",
@@ -99,7 +99,15 @@ public static class OpenSearchExtensions
                 };
             }
 
-            loggerConfig.WriteTo.OpenSearch(openSearchSinkOptions);
+            // Log enrichment ekle
+            loggerConfig
+                .Enrich.WithProperty("Source", "ECommerce.API")
+                .Enrich.WithProperty("LogType", "Application")
+                .Enrich.WithProperty("MachineName", Environment.MachineName)
+                .Enrich.WithProperty("Environment", environment.EnvironmentName)
+                .Enrich.WithProperty("ProcessId", Environment.ProcessId)
+                .Enrich.WithProperty("ThreadId", Environment.CurrentManagedThreadId)
+                .WriteTo.OpenSearch(openSearchSinkOptions);
 
             Console.WriteLine($"OpenSearch sink configured successfully. Nodes: {string.Join(", ", openSearchConfig.NodeUris)}");
         }

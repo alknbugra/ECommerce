@@ -1,4 +1,5 @@
 using ECommerce.Application.Common.Interfaces;
+using ECommerce.Application.Common.Messaging;
 using ECommerce.Application.DTOs;
 using ECommerce.Application.Features.Users.Commands.UpdateUserProfile;
 using ECommerce.Application.Features.Users.Commands.ChangePassword;
@@ -116,7 +117,7 @@ public static class UsersEndpoints
             SortDirection = request.SortDirection
         };
 
-        var users = await handler.HandleAsync(query, cancellationToken);
+        var users = await handler.Handle(query, cancellationToken);
         return Results.Ok(users);
     }
 
@@ -136,7 +137,7 @@ public static class UsersEndpoints
             RequestingUserId = requestingUserId
         };
 
-        var user = await handler.HandleAsync(query, cancellationToken);
+        var user = await handler.Handle(query, cancellationToken);
         if (user == null)
         {
             return Results.NotFound($"ID'si {id} olan kullanıcı bulunamadı.");
@@ -165,7 +166,7 @@ public static class UsersEndpoints
             RequestingUserId = userId
         };
 
-        var user = await handler.HandleAsync(query, cancellationToken);
+        var user = await handler.Handle(query, cancellationToken);
         if (user == null)
         {
             return Results.NotFound("Kullanıcı bulunamadı.");
@@ -190,7 +191,7 @@ public static class UsersEndpoints
         }
 
         command.UserId = userId.Value;
-        var user = await handler.HandleAsync(command, cancellationToken);
+        var user = await handler.Handle(command, cancellationToken);
         return Results.Ok(user);
     }
 
@@ -210,7 +211,7 @@ public static class UsersEndpoints
         }
 
         command.UserId = userId.Value;
-        var result = await handler.HandleAsync(command, cancellationToken);
+        var result = await handler.Handle(command, cancellationToken);
         return Results.Ok(result);
     }
 
@@ -241,7 +242,7 @@ public static class UsersEndpoints
             UpdatedByUserId = userId.Value
         };
 
-        var user = await handler.HandleAsync(command, cancellationToken);
+        var user = await handler.Handle(command, cancellationToken);
         return Results.Ok(user);
     }
 

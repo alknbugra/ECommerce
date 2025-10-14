@@ -24,12 +24,22 @@ Modern, ölçeklenebilir ve güvenli bir e-ticaret API'si. Clean Architecture, C
 - **Permission-based Access Control** (PBAC)
 - **Refresh Token** mekanizması
 - **Password Hashing** (PBKDF2 + SHA256)
+- **Email/Phone Verification** - E-posta ve telefon doğrulama
+- **Account Lockout** - Başarısız giriş denemesi koruması
 
 ### 🛍️ E-Ticaret Özellikleri
 
-- **Ürün Yönetimi** - CRUD işlemleri, resim yükleme
-- **Kategori Yönetimi** - Hiyerarşik kategori yapısı
-- **Sipariş Yönetimi** - Sipariş oluşturma, durum takibi
+- **Ürün Yönetimi** - CRUD işlemleri, resim yükleme, SKU yönetimi
+- **Kategori Yönetimi** - Hiyerarşik kategori yapısı, sıralama
+- **Sipariş Yönetimi** - Sipariş oluşturma, durum takibi, geçmiş
+- **Sepet Yönetimi** - Session tabanlı sepet, miktar güncelleme
+- **Wishlist (İstek Listesi)** - Favori ürünler, fiyat takibi
+- **Kupon Sistemi** - İndirim kuponları, doğrulama, kullanım takibi
+- **Ürün Değerlendirmeleri** - Yıldız puanlama, yorum sistemi
+- **Stok Yönetimi** - Envanter takibi, stok hareketleri, uyarılar
+- **Ödeme Sistemi** - Iyzico entegrasyonu, 3D Secure, webhook
+- **Email Sistemi** - SMTP entegrasyonu, şablon yönetimi
+- **Dosya Yükleme** - Resim yükleme, dosya validasyonu
 - **Kullanıcı Yönetimi** - Profil yönetimi, şifre değiştirme
 - **Adres Yönetimi** - Teslimat ve fatura adresleri
 
@@ -64,28 +74,44 @@ Modern, ölçeklenebilir ve güvenli bir e-ticaret API'si. Clean Architecture, C
 
 - **.NET 9.0** - Framework
 - **ASP.NET Core Web API** - Web API
-- **Entity Framework Core** - ORM
+- **Entity Framework Core 9.0** - ORM
 - **SQL Server** - Veritabanı
-- **AutoMapper** - Object Mapping
+- **AutoMapper 15.0** - Object Mapping
+- **Scrutor 6.1** - Dependency Injection
 
 ### Authentication & Security
 
 - **JWT Bearer Token** - Kimlik doğrulama
 - **BCrypt** - Şifre hashleme
-- **FluentValidation** - Veri doğrulama
+- **FluentValidation 12.0** - Veri doğrulama
+- **Role-based Authorization** - Yetkilendirme
+
+### Payment & External Services
+
+- **Iyzico Payment Gateway** - Ödeme işlemleri
+- **SMTP Email Service** - Email gönderimi
+- **3D Secure** - Güvenli ödeme
 
 ### Logging & Monitoring
 
-- **Serilog** - Structured logging
-- **OpenTelemetry** - Distributed tracing
-- **OpenSearch** - Log aggregation
+- **Serilog 9.0** - Structured logging
+- **OpenTelemetry 1.13** - Distributed tracing
+- **OpenSearch 2.11** - Log aggregation
 - **OpenSearch Dashboard** - Log visualization
+- **Health Checks** - Sistem durumu kontrolü
+
+### Caching & Performance
+
+- **In-Memory Caching** - Performans optimizasyonu
+- **Async/Await** - Asenkron programlama
+- **Connection Pooling** - Veritabanı optimizasyonu
 
 ### Development Tools
 
-- **Swagger/OpenAPI** - API documentation
-- **Docker** - Containerization
+- **Swagger/OpenAPI 9.0** - API documentation
+- **Docker & Docker Compose** - Containerization
 - **Git** - Version control
+- **xUnit** - Unit testing
 
 ## 🏛️ Mimari
 
@@ -94,32 +120,62 @@ Proje Clean Architecture prensiplerine uygun olarak 4 katmanlı yapıda tasarlan
 ```
 ECommerce/
 ├── ECommerce.Domain/          # Domain Layer
-│   ├── Entities/             # Domain entities
-│   ├── Enums/               # Domain enums
+│   ├── Entities/             # Domain entities (35+ entities)
+│   ├── Enums/               # Domain enums (12 enums)
 │   ├── Interfaces/          # Repository interfaces
 │   └── Exceptions/          # Domain exceptions
 ├── ECommerce.Application/     # Application Layer
-│   ├── Features/            # CQRS features
-│   ├── DTOs/               # Data transfer objects
+│   ├── Features/            # CQRS features (15+ modules)
+│   │   ├── Auth/           # Authentication & Authorization
+│   │   ├── Products/       # Product management
+│   │   ├── Orders/         # Order processing
+│   │   ├── Cart/           # Shopping cart
+│   │   ├── Payments/       # Payment processing
+│   │   ├── Coupons/        # Coupon system
+│   │   ├── Wishlists/      # Wishlist management
+│   │   ├── Inventory/      # Stock management
+│   │   ├── ProductReviews/ # Review system
+│   │   └── Emails/         # Email services
+│   ├── DTOs/               # Data transfer objects (40+ DTOs)
 │   ├── Common/             # Shared application logic
+│   │   ├── Behaviors/      # MediatR behaviors
+│   │   ├── Decorators/     # Cross-cutting concerns
+│   │   ├── Interfaces/     # Application interfaces
+│   │   ├── Results/        # Result patterns
+│   │   └── Messaging/      # CQRS messaging
 │   └── Mappings/           # AutoMapper profiles
 ├── ECommerce.Infrastructure/  # Infrastructure Layer
-│   ├── Data/               # Database context
+│   ├── Data/               # Database context & migrations
 │   ├── Repositories/       # Repository implementations
 │   ├── Services/           # External services
+│   │   ├── PaymentGateway/ # Iyzico integration
+│   │   ├── EmailService/   # SMTP service
+│   │   └── FileService/    # File upload service
 │   └── Configuration/      # Configuration classes
 └── ECommerce.API/           # Presentation Layer
-    ├── Endpoints/          # API endpoints
+    ├── Endpoints/          # API endpoints (15+ endpoint groups)
     ├── Common/            # Shared API logic
-    └── Middleware/        # Custom middleware
+    │   ├── Extensions/    # Extension methods
+    │   ├── Middleware/    # Custom middleware
+    │   └── ProblemDetails/ # Error handling
+    └── Properties/        # Launch settings
 ```
 
 ### CQRS Pattern
 
-- **Commands** - Veri değiştirme işlemleri
-- **Queries** - Veri okuma işlemleri
+- **Commands** - Veri değiştirme işlemleri (Create, Update, Delete)
+- **Queries** - Veri okuma işlemleri (Get, List, Search)
 - **Handlers** - İş mantığı implementasyonu
-- **Validators** - Veri doğrulama
+- **Validators** - FluentValidation ile veri doğrulama
+- **Decorators** - Logging, Caching, Performance monitoring
+
+### Design Patterns
+
+- **Repository Pattern** - Veri erişim soyutlaması
+- **Unit of Work** - İşlem yönetimi
+- **Decorator Pattern** - Cross-cutting concerns
+- **Result Pattern** - Hata yönetimi
+- **Dependency Injection** - Bağımlılık yönetimi
 
 ## 🚀 Kurulum
 
@@ -185,6 +241,9 @@ Uygulama çalıştıktan sonra Swagger UI'ya erişin:
 - `POST /api/auth/register` - Kullanıcı kaydı
 - `POST /api/auth/login` - Giriş yapma
 - `POST /api/auth/refresh-token` - Token yenileme
+- `POST /api/auth/logout` - Çıkış yapma
+- `POST /api/auth/forgot-password` - Şifre sıfırlama
+- `POST /api/auth/reset-password` - Şifre yenileme
 
 #### 👥 Users
 
@@ -192,29 +251,89 @@ Uygulama çalıştıktan sonra Swagger UI'ya erişin:
 - `GET /api/users/{id}` - Kullanıcı detayı
 - `PUT /api/users/{id}/profile` - Profil güncelle
 - `PUT /api/users/{id}/password` - Şifre değiştir
+- `GET /api/users/{id}/addresses` - Kullanıcı adresleri
+- `POST /api/users/{id}/addresses` - Adres ekle
 
 #### 🛍️ Products
 
-- `GET /api/products` - Ürünleri listele
+- `GET /api/products` - Ürünleri listele (filtreleme, arama)
 - `GET /api/products/{id}` - Ürün detayı
 - `POST /api/products` - Ürün oluştur
 - `PUT /api/products/{id}` - Ürün güncelle
 - `DELETE /api/products/{id}` - Ürün sil
+- `GET /api/products/{id}/reviews` - Ürün değerlendirmeleri
 
 #### 📂 Categories
 
 - `GET /api/categories` - Kategorileri listele
 - `GET /api/categories/{id}` - Kategori detayı
+- `GET /api/categories/{id}/subcategories` - Alt kategoriler
 - `POST /api/categories` - Kategori oluştur
 - `PUT /api/categories/{id}` - Kategori güncelle
 - `DELETE /api/categories/{id}` - Kategori sil
 
 #### 🛒 Orders
 
-- `GET /api/orders` - Siparişleri listele
+- `GET /api/orders` - Siparişleri listele (Admin)
+- `GET /api/orders/my-orders` - Kullanıcının siparişleri
 - `GET /api/orders/{id}` - Sipariş detayı
 - `POST /api/orders` - Sipariş oluştur
 - `PUT /api/orders/{id}/status` - Sipariş durumu güncelle
+
+#### 🛒 Cart (Sepet)
+
+- `GET /api/cart` - Sepeti getir
+- `POST /api/cart/add` - Sepete ürün ekle
+- `PUT /api/cart/update` - Sepet ürünü güncelle
+- `DELETE /api/cart/remove` - Sepetten ürün çıkar
+- `DELETE /api/cart/clear` - Sepeti temizle
+
+#### 💳 Payments
+
+- `POST /api/payments` - Ödeme oluştur
+- `POST /api/payments/verify-3d-secure` - 3D Secure doğrula
+- `GET /api/payments/{id}/status` - Ödeme durumu
+- `POST /api/payments/{id}/cancel` - Ödeme iptal et
+- `POST /api/payments/{id}/refund` - Ödeme iade et
+- `POST /api/payments/webhook` - Webhook (Iyzico)
+
+#### 🎁 Coupons
+
+- `GET /api/coupons` - Kuponları listele
+- `GET /api/coupons/{code}` - Kupon detayı
+- `POST /api/coupons/validate` - Kupon doğrula
+- `POST /api/coupons` - Kupon oluştur (Admin)
+- `PUT /api/coupons/{id}` - Kupon güncelle (Admin)
+
+#### ⭐ Product Reviews
+
+- `GET /api/product-reviews` - Değerlendirmeleri listele
+- `GET /api/product-reviews/{id}` - Değerlendirme detayı
+- `POST /api/product-reviews` - Değerlendirme oluştur
+- `PUT /api/product-reviews/{id}` - Değerlendirme güncelle
+- `DELETE /api/product-reviews/{id}` - Değerlendirme sil
+
+#### 📋 Wishlists
+
+- `GET /api/wishlists` - İstek listelerini getir
+- `POST /api/wishlists` - İstek listesi oluştur
+- `POST /api/wishlists/{id}/items` - Ürün ekle
+- `DELETE /api/wishlists/{id}/items/{itemId}` - Ürün çıkar
+- `GET /api/wishlists/{id}/stats` - İstatistikler
+
+#### 📦 Inventory
+
+- `GET /api/inventory` - Stok durumunu getir
+- `POST /api/inventory/stock-in` - Stok girişi
+- `POST /api/inventory/stock-out` - Stok çıkışı
+- `GET /api/inventory/movements` - Stok hareketleri
+- `GET /api/inventory/alerts` - Stok uyarıları
+
+#### 📧 Email
+
+- `POST /api/email/send` - Email gönder
+- `GET /api/email/templates` - Email şablonları
+- `POST /api/email/templates` - Email şablonu oluştur
 
 #### 🔑 Permissions
 
@@ -227,6 +346,7 @@ Uygulama çalıştıktan sonra Swagger UI'ya erişin:
 
 - `POST /api/files/upload` - Dosya yükle
 - `DELETE /api/files/{id}` - Dosya sil
+- `GET /api/files/{id}` - Dosya indir
 
 ## 💻 Kullanım
 
@@ -263,8 +383,118 @@ curl -X POST "https://localhost:7047/api/products" \
   -d '{
     "name": "Örnek Ürün",
     "description": "Ürün açıklaması",
+    "sku": "PRD-001",
     "price": 99.99,
+    "stockQuantity": 100,
     "categoryId": "category-guid"
+  }'
+```
+
+### 4. Sepete Ürün Ekleme
+
+```bash
+curl -X POST "https://localhost:7047/api/cart/add" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "product-guid",
+    "quantity": 2
+  }'
+```
+
+### 5. Sipariş Oluşturma
+
+```bash
+curl -X POST "https://localhost:7047/api/orders" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "shippingAddressId": "address-guid",
+    "billingAddressId": "address-guid",
+    "orderItems": [
+      {
+        "productId": "product-guid",
+        "quantity": 2,
+        "discountAmount": 10.00
+      }
+    ],
+    "shippingCost": 15.00,
+    "taxAmount": 20.00,
+    "discountAmount": 10.00,
+    "paymentMethod": "CreditCard"
+  }'
+```
+
+### 6. Ödeme İşlemi
+
+```bash
+curl -X POST "https://localhost:7047/api/payments" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "orderId": "order-guid",
+    "paymentMethod": "CreditCard",
+    "cardNumber": "5555444433332222",
+    "cardHolderName": "John Doe",
+    "expiryMonth": "12",
+    "expiryYear": "2025",
+    "cvv": "123"
+  }'
+```
+
+### 7. Kupon Doğrulama
+
+```bash
+curl -X POST "https://localhost:7047/api/coupons/validate" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "couponCode": "WELCOME10",
+    "orderAmount": 100.00
+  }'
+```
+
+### 8. Ürün Değerlendirmesi
+
+```bash
+curl -X POST "https://localhost:7047/api/product-reviews" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "product-guid",
+    "rating": 5,
+    "title": "Harika ürün!",
+    "comment": "Çok memnun kaldım, tavsiye ederim."
+  }'
+```
+
+### 9. Wishlist'e Ürün Ekleme
+
+```bash
+curl -X POST "https://localhost:7047/api/wishlists/items" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "wishlistId": "wishlist-guid",
+    "productId": "product-guid"
+  }'
+```
+
+### 10. Email Gönderme
+
+```bash
+curl -X POST "https://localhost:7047/api/email/send" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "customer@example.com",
+    "subject": "Sipariş Onayı",
+    "templateName": "OrderConfirmation",
+    "templateData": {
+      "orderNumber": "ORD-001",
+      "customerName": "John Doe",
+      "totalAmount": 125.00
+    }
   }'
 ```
 
@@ -360,27 +590,98 @@ Tüm loglar JSON formatında OpenSearch'e gönderilir:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=ECommerceDb;Trusted_Connection=true"
+    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=ECommerceDb;Trusted_Connection=true;MultipleActiveResultSets=true"
   },
   "Jwt": {
-    "SecretKey": "your-secret-key-here",
+    "SecretKey": "ECommerce_Super_Secret_Key_That_Should_Be_At_Least_32_Characters_Long_For_Security",
     "Issuer": "ECommerce.API",
     "Audience": "ECommerce.Users",
-    "ExpiryMinutes": 60
+    "AccessTokenExpirationMinutes": 60,
+    "RefreshTokenExpirationDays": 7,
+    "ClockSkewMinutes": 5
   },
   "FileUpload": {
-    "MaxFileSizeMB": 10,
-    "AllowedExtensions": [".jpg", ".jpeg", ".png", ".gif"],
-    "UploadPath": "uploads"
+    "UploadPath": "wwwroot/uploads",
+    "WebBasePath": "/uploads",
+    "MaxFileSize": 5242880,
+    "AllowedFileTypes": [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp"
+    ],
+    "AllowedExtensions": [".jpg", ".jpeg", ".png", ".gif", ".webp"],
+    "ValidFileNamePattern": "^[a-zA-Z0-9._-]+$",
+    "MaxFileNameLength": 100
   },
   "Cache": {
+    "Enabled": true,
     "DefaultExpirationMinutes": 30,
-    "MaxSize": 1000
+    "MaxSizeMB": 100,
+    "CleanupIntervalMinutes": 5,
+    "ProductCacheMinutes": 15,
+    "CategoryCacheMinutes": 30,
+    "UserCacheMinutes": 10,
+    "OrderCacheMinutes": 5
+  },
+  "Serilog": {
+    "MinimumLevel": "Debug",
+    "EnableConsoleSink": true,
+    "EnableFileSink": true,
+    "LogFilePath": "logs/ecommerce-.log",
+    "FileSizeLimitMB": 100,
+    "RetainedFileCountLimit": 10,
+    "RollingInterval": "Day",
+    "UseJsonFormat": true,
+    "EnableStructuredLogging": true,
+    "EnableRequestLogging": true,
+    "EnablePerformanceLogging": true,
+    "EnableSensitiveDataMasking": true
+  },
+  "OpenTelemetry": {
+    "Enabled": true,
+    "ServiceName": "ECommerce.API",
+    "ServiceVersion": "1.0.0",
+    "ServiceNamespace": "ECommerce",
+    "EnableConsoleExporter": true,
+    "EnableAspNetCoreInstrumentation": true,
+    "EnableEntityFrameworkCoreInstrumentation": true,
+    "EnableHttpClientInstrumentation": true,
+    "SamplingRatio": 1.0
   },
   "OpenSearch": {
     "Enabled": true,
     "NodeUris": ["http://localhost:9200"],
-    "IndexFormat": "ecommerce-logs-{0:yyyy.MM.dd}"
+    "IndexFormat": "ecommerce-logs-{0:yyyy.MM.dd}",
+    "IndexTemplateName": "ecommerce-logs-template",
+    "AutoRegisterTemplate": true,
+    "NumberOfShards": 1,
+    "NumberOfReplicas": 0,
+    "IndexRefreshInterval": "5s",
+    "EnableIndexLifecycleManagement": true,
+    "IndexRetentionDays": 30
+  },
+  "PaymentGateway": {
+    "Iyzico": {
+      "ApiKey": "sandbox-your-api-key",
+      "SecretKey": "sandbox-your-secret-key",
+      "BaseUrl": "https://sandbox-api.iyzipay.com",
+      "IsTestMode": true
+    }
+  },
+  "Email": {
+    "Smtp": {
+      "Host": "smtp.gmail.com",
+      "Port": 587,
+      "Username": "your-email@gmail.com",
+      "Password": "your-app-password",
+      "EnableSsl": true
+    },
+    "From": {
+      "Email": "noreply@yourapp.com",
+      "Name": "E-Commerce"
+    }
   }
 }
 ```
@@ -463,8 +764,14 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 
 ### Gelecek Özellikler
 
-- [ ] Payment Gateway entegrasyonu
-- [ ] Email notification sistemi
+- [x] Payment Gateway entegrasyonu (Iyzico)
+- [x] Email notification sistemi (SMTP)
+- [x] Kupon sistemi
+- [x] Ürün değerlendirme sistemi
+- [x] Wishlist (İstek listesi) yönetimi
+- [x] Stok yönetimi ve envanter takibi
+- [x] OpenSearch entegrasyonu
+- [x] Gelişmiş logging ve monitoring
 - [ ] Real-time notifications (SignalR)
 - [ ] Advanced search (Elasticsearch)
 - [ ] API rate limiting
@@ -473,6 +780,10 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 - [ ] GraphQL endpoint
 - [ ] Microservices architecture
 - [ ] Kubernetes deployment
+- [ ] Redis caching
+- [ ] Message queues (RabbitMQ/Azure Service Bus)
+- [ ] Event sourcing
+- [ ] CQRS with separate read/write databases
 
 ### Versiyon Geçmişi
 
@@ -480,7 +791,26 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 - **v1.1.0** - Permission sistemi eklendi
 - **v1.2.0** - OpenSearch entegrasyonu
 - **v1.3.0** - Caching ve performance optimizasyonları
+- **v1.4.0** - Payment Gateway (Iyzico) entegrasyonu
+- **v1.5.0** - Email sistemi ve SMTP entegrasyonu
+- **v1.6.0** - Kupon sistemi ve doğrulama
+- **v1.7.0** - Ürün değerlendirme sistemi
+- **v1.8.0** - Wishlist yönetimi
+- **v1.9.0** - Stok yönetimi ve envanter takibi
+- **v2.0.0** - Gelişmiş logging, monitoring ve OpenTelemetry
+
+### Proje İstatistikleri
+
+- **35+ Domain Entities** - Kapsamlı domain modeli
+- **40+ DTOs** - Veri transfer nesneleri
+- **15+ Feature Modules** - CQRS modülleri
+- **15+ API Endpoint Groups** - RESTful API'ler
+- **12+ Enums** - Domain enum'ları
+- **6+ External Services** - Harici servis entegrasyonları
+- **100% Async/Await** - Asenkron programlama
+- **Clean Architecture** - Katmanlı mimari
+- **SOLID Principles** - Temiz kod prensipleri
 
 ---
 
-**Son güncelleme**: 2025-10-13
+**Son güncelleme**: 2025-10-14

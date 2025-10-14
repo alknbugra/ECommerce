@@ -24,12 +24,12 @@ public class AssignPermissionToRoleCommandHandler : ICommandHandler<AssignPermis
         _logger = logger;
     }
 
-    public async Task<bool> HandleAsync(AssignPermissionToRoleCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(AssignPermissionToRoleCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Role {RoleId} yetki {PermissionId} atanıyor.", request.RoleId, request.PermissionId);
-
         try
         {
+            _logger.LogInformation("Role {RoleId} yetki {PermissionId} atanıyor.", request.RoleId, request.PermissionId);
+
             var rolePermission = await _rolePermissionRepository.AssignPermissionToRoleAsync(
                 request.RoleId, 
                 request.PermissionId, 
@@ -46,12 +46,12 @@ public class AssignPermissionToRoleCommandHandler : ICommandHandler<AssignPermis
 
             _logger.LogInformation("Role {RoleId} yetki {PermissionId} başarıyla atandı.", request.RoleId, request.PermissionId);
 
-            return true;
+            return Result.Success<bool>(true);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Role {RoleId} yetki {PermissionId} atanırken hata oluştu.", request.RoleId, request.PermissionId);
-            throw;
+            return Result.Failure<bool>(Error.Problem("RolePermission.AssignError", "Role yetki atama sırasında bir hata oluştu."));
         }
     }
 }

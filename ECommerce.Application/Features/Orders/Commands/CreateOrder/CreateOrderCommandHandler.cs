@@ -23,34 +23,36 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Ord
         _logger = logger;
     }
 
-    public async Task<OrderDto> HandleAsync(CreateOrderCommand request, CancellationToken cancellationToken = default)
+    public async Task<Result<OrderDto>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Yeni sipariş oluşturuluyor - Kullanıcı: {UserId}", request.UserId);
-
-        // Kullanıcı kontrolü
-        var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
-        if (user == null)
+        try
         {
-            throw new NotFoundException("Kullanıcı bulunamadı.");
-        }
+            _logger.LogInformation("Yeni sipariş oluşturuluyor - Kullanıcı: {UserId}", request.UserId);
 
-        // Teslimat adresi kontrolü
-        var shippingAddress = await _unitOfWork.Addresses.GetByIdAsync(request.ShippingAddressId);
-        if (shippingAddress == null || shippingAddress.UserId != request.UserId)
-        {
-            throw new NotFoundException("Teslimat adresi bulunamadı veya kullanıcıya ait değil.");
-        }
-
-        // Fatura adresi kontrolü
-        Address? billingAddress = null;
-        if (request.BillingAddressId.HasValue)
-        {
-            billingAddress = await _unitOfWork.Addresses.GetByIdAsync(request.BillingAddressId.Value);
-            if (billingAddress == null || billingAddress.UserId != request.UserId)
+            // Kullanıcı kontrolü
+            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
+            if (user == null)
             {
-                throw new NotFoundException("Fatura adresi bulunamadı veya kullanıcıya ait değil.");
+                return Result.Failure<OrderDto>(Error.NotFound("Order.UserNotFound", "Kullanıcı bulunamadı."));
             }
-        }
+
+            // Teslimat adresi kontrolü
+            var shippingAddress = await _unitOfWork.Addresses.GetByIdAsync(request.ShippingAddressId);
+            if (shippingAddress == null || shippingAddress.UserId != request.UserId)
+            {
+                return Result.Failure<OrderDto>(Error.NotFound("Order.ShippingAddressNotFound", "Teslimat adresi bulunamadı veya kullanıcıya ait değil."));
+            }
+
+            // Fatura adresi kontrolü
+            Address? billingAddress = null;
+            if (request.BillingAddressId.HasValue)
+            {
+                billingAddress = await _unitOfWork.Addresses.GetByIdAsync(request.BillingAddressId.Value);
+                if (billingAddress == null || billingAddress.UserId != request.UserId)
+                {
+                    return Result.Failure<OrderDto>(Error.NotFound("Order.BillingAddressNotFound", "Fatura adresi bulunamadı veya kullanıcıya ait değil."));
+                }
+            }
 
         // Sipariş detaylarını kontrol et ve ürün bilgilerini al
         var orderItems = new List<OrderItem>();
@@ -149,7 +151,7 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Ord
         _logger.LogInformation("Sipariş başarıyla oluşturuldu: {OrderNumber} (ID: {Id})", orderNumber, order.Id);
 
         // DTO'ya dönüştür
-        return new OrderDto
+        var orderDto = new OrderDto
         {
             Id = order.Id,
             OrderNumber = order.OrderNumber,
@@ -232,6 +234,14 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Ord
                 }
             }
         };
+
+        return Result.Success(orderDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Sipariş oluşturma sırasında hata oluştu. UserId: {UserId}", request.UserId);
+            return Result.Failure<OrderDto>(Error.Problem("Order.CreateError", "Sipariş oluşturma sırasında bir hata oluştu."));
+        }
     }
 
     /// <summary>

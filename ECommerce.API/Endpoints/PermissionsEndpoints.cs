@@ -3,6 +3,7 @@ using ECommerce.Application.Features.Permissions.Queries.GetUserPermissions;
 using ECommerce.Application.Features.RolePermissions.Commands.AssignPermissionToRole;
 using ECommerce.Application.Features.RolePermissions.Queries.GetRolePermissions;
 using ECommerce.Application.Common.Interfaces;
+using ECommerce.Application.Common.Messaging;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Endpoints;
@@ -28,7 +29,7 @@ public static class PermissionsEndpoints
             IQueryHandler<GetPermissionsQuery, IEnumerable<ECommerce.Application.DTOs.PermissionDto>> handler,
             CancellationToken cancellationToken) =>
         {
-            var permissions = await handler.HandleAsync(query, cancellationToken);
+            var permissions = await handler.Handle(query, cancellationToken);
             return Results.Ok(permissions);
         })
         .WithName("GetPermissions")
@@ -45,7 +46,7 @@ public static class PermissionsEndpoints
             CancellationToken cancellationToken) =>
         {
             var query = new GetPermissionsQuery { Category = category };
-            var permissions = await handler.HandleAsync(query, cancellationToken);
+            var permissions = await handler.Handle(query, cancellationToken);
             return Results.Ok(permissions);
         })
         .WithName("GetPermissionsByCategory")
@@ -62,7 +63,7 @@ public static class PermissionsEndpoints
             CancellationToken cancellationToken) =>
         {
             var query = new GetRolePermissionsQuery { RoleId = roleId };
-            var rolePermissions = await handler.HandleAsync(query, cancellationToken);
+            var rolePermissions = await handler.Handle(query, cancellationToken);
             return Results.Ok(rolePermissions);
         })
         .WithName("GetRolePermissions")
@@ -78,7 +79,7 @@ public static class PermissionsEndpoints
             IQueryHandler<GetRolePermissionsQuery, IEnumerable<ECommerce.Application.DTOs.RolePermissionDto>> handler,
             CancellationToken cancellationToken) =>
         {
-            var rolePermissions = await handler.HandleAsync(query, cancellationToken);
+            var rolePermissions = await handler.Handle(query, cancellationToken);
             return Results.Ok(rolePermissions);
         })
         .WithName("GetAllRolePermissions")
@@ -94,9 +95,11 @@ public static class PermissionsEndpoints
             ICommandHandler<AssignPermissionToRoleCommand, bool> handler,
             CancellationToken cancellationToken) =>
         {
-            var result = await handler.HandleAsync(command, cancellationToken);
-            return result ? Results.Ok(new { success = true, message = "Yetki başarıyla atandı." }) 
-                         : Results.BadRequest(new { success = false, message = "Yetki atanamadı." });
+            var result = await handler.Handle(command, cancellationToken);
+            if (result.IsFailure)
+                return Results.BadRequest(result.Error);
+            
+            return Results.Ok(new { success = result.Value, message = "Yetki başarıyla atandı." });
         })
         .WithName("AssignPermissionToRole")
         .WithSummary("Role yetki ata")
@@ -112,7 +115,7 @@ public static class PermissionsEndpoints
             CancellationToken cancellationToken) =>
         {
             var query = new GetUserPermissionsQuery { UserId = userId };
-            var permissions = await handler.HandleAsync(query, cancellationToken);
+            var permissions = await handler.Handle(query, cancellationToken);
             return Results.Ok(permissions);
         })
         .WithName("GetUserPermissions")

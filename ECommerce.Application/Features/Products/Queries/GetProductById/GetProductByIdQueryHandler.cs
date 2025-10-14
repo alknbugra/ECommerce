@@ -8,7 +8,7 @@ namespace ECommerce.Application.Features.Products.Queries.GetProductById;
 /// <summary>
 /// ID'ye göre ürün getirme sorgu handler'ı
 /// </summary>
-public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, ProductDto?>
+public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, ProductDto>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -19,27 +19,34 @@ public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, Pro
         _mapper = mapper;
     }
 
-    public async Task<ProductDto?> HandleAsync(GetProductByIdQuery request, CancellationToken cancellationToken = default)
+    public async Task<Result<ProductDto>> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
     {
-        var product = await _unitOfWork.Products.GetByIdAsync(request.Id);
-        
-        if (product == null)
+        try
         {
-            return null;
-        }
+            var product = await _unitOfWork.Products.GetByIdAsync(request.Id);
+            
+            if (product == null)
+            {
+                return Result.Failure<ProductDto>(Error.NotFound("Product", request.Id.ToString()));
+            }
 
-        var productDto = _mapper.Map<ProductDto>(product);
-        
-        // Kategori adını al
-        if (product.Category != null)
+            var productDto = _mapper.Map<ProductDto>(product);
+            
+            // Kategori adını al
+            if (product.Category != null)
+            {
+                productDto.CategoryName = product.Category.Name;
+            }
+
+            // Ürün resimlerini al
+            var images = await _unitOfWork.ProductImages.FindAsync(img => img.ProductId == product.Id);
+            productDto.Images = _mapper.Map<List<ProductImageDto>>(images);
+
+            return Result.Success(productDto);
+        }
+        catch (Exception ex)
         {
-            productDto.CategoryName = product.Category.Name;
+            return Result.Failure<ProductDto>(Error.Failure("GetProductById.Failed", $"Ürün getirilirken hata oluştu: {ex.Message}"));
         }
-
-        // Ürün resimlerini al
-        var images = await _unitOfWork.ProductImages.FindAsync(img => img.ProductId == product.Id);
-        productDto.Images = _mapper.Map<List<ProductImageDto>>(images);
-
-        return productDto;
     }
 }

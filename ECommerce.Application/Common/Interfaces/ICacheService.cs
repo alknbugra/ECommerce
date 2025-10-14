@@ -20,8 +20,9 @@ public interface ICacheService
     /// </summary>
     /// <typeparam name="T">Değer tipi</typeparam>
     /// <param name="key">Cache anahtarı</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Cache'deki değer veya null</returns>
-    Task<T?> GetAsync<T>(string key) where T : class;
+    Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class;
 
     /// <summary>
     /// Cache'e değer ekle
@@ -39,7 +40,8 @@ public interface ICacheService
     /// <param name="key">Cache anahtarı</param>
     /// <param name="value">Eklenecek değer</param>
     /// <param name="expiration">Süre sonu (opsiyonel)</param>
-    Task SetAsync<T>(string key, T value, TimeSpan? expiration = null) where T : class;
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class;
 
     /// <summary>
     /// Cache'den değer sil

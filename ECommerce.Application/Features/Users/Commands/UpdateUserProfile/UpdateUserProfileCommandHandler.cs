@@ -23,51 +23,61 @@ public class UpdateUserProfileCommandHandler : ICommandHandler<UpdateUserProfile
         _logger = logger;
     }
 
-    public async Task<UserDto> HandleAsync(UpdateUserProfileCommand request, CancellationToken cancellationToken = default)
+    public async Task<Result<UserDto>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Kullanıcı profili güncelleniyor: {UserId}", request.UserId);
-
-        // Kullanıcıyı bul
-        var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
-        if (user == null)
+        try
         {
-            throw new NotFoundException("Kullanıcı bulunamadı.");
+            _logger.LogInformation("Kullanıcı profili güncelleniyor: {UserId}", request.UserId);
+
+            // Kullanıcıyı bul
+            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
+            if (user == null)
+            {
+                return Result.Failure<UserDto>(Error.NotFound("User", request.UserId.ToString()));
+            }
+
+            if (!user.IsActive)
+            {
+                return Result.Failure<UserDto>(Error.Validation("User", "Kullanıcı aktif değil."));
+            }
+
+            // Profil bilgilerini güncelle
+            user.FirstName = request.FirstName;
+            user.LastName = request.LastName;
+            user.PhoneNumber = request.PhoneNumber;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.CompleteAsync(cancellationToken);
+
+            // Kullanıcı rollerini al
+            var userRoles = await _unitOfWork.UserRoles.GetUserRolesAsync(user.Id);
+            var roleNames = userRoles.Select(ur => ur.Role.Name).ToList();
+
+            _logger.LogInformation("Kullanıcı profili başarıyla güncellendi: {Email}", user.Email);
+
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                PhoneNumber = user.PhoneNumber,
+                EmailConfirmed = user.EmailConfirmed,
+                PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+                IsLocked = user.IsLocked,
+                IsActive = user.IsActive,
+                FullName = user.FullName,
+                Roles = roleNames,
+                CreatedAt = user.CreatedAt
+            };
+
+            return Result.Success(userDto);
         }
-
-        if (!user.IsActive)
+        catch (Exception ex)
         {
-            throw new BadRequestException("Kullanıcı aktif değil.");
+            _logger.LogError(ex, "Kullanıcı profili güncellenirken hata oluştu: {UserId}", request.UserId);
+            return Result.Failure<UserDto>(Error.Failure("UpdateUserProfile.Failed", $"Kullanıcı profili güncellenirken hata oluştu: {ex.Message}"));
         }
-
-        // Profil bilgilerini güncelle
-        user.FirstName = request.FirstName;
-        user.LastName = request.LastName;
-        user.PhoneNumber = request.PhoneNumber;
-        user.UpdatedAt = DateTime.UtcNow;
-
-        await _unitOfWork.Users.UpdateAsync(user);
-        await _unitOfWork.CompleteAsync(cancellationToken);
-
-        // Kullanıcı rollerini al
-        var userRoles = await _unitOfWork.UserRoles.GetUserRolesAsync(user.Id);
-        var roleNames = userRoles.Select(ur => ur.Role.Name).ToList();
-
-        _logger.LogInformation("Kullanıcı profili başarıyla güncellendi: {Email}", user.Email);
-
-        return new UserDto
-        {
-            Id = user.Id,
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            PhoneNumber = user.PhoneNumber,
-            EmailConfirmed = user.EmailConfirmed,
-            PhoneNumberConfirmed = user.PhoneNumberConfirmed,
-            IsLocked = user.IsLocked,
-            IsActive = user.IsActive,
-            FullName = user.FullName,
-            Roles = roleNames,
-            CreatedAt = user.CreatedAt
-        };
     }
 }

@@ -60,6 +60,21 @@ builder.Services.AddApplication();
 // Add infrastructure services
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Add Payment Gateway services
+builder.Services.AddPaymentGatewayServices(builder.Configuration);
+
+// Add Email services
+builder.Services.AddEmailServices(builder.Configuration);
+
+// Add Inventory services
+builder.Services.AddInventoryServices(builder.Configuration);
+
+// Coupon servisleri
+builder.Services.AddCouponServices(builder.Configuration);
+
+// Product Review servisleri
+builder.Services.AddProductReviewServices(builder.Configuration);
+
 // JWT Configuration
 builder.Services.Configure<JwtConfiguration>(builder.Configuration.GetSection("Jwt"));
 
@@ -132,6 +147,19 @@ app.MapOrdersEndpoints();
 app.MapUsersEndpoints();
 app.MapFileUploadEndpoints();
 app.MapPermissionsEndpoints();
+app.MapCartEndpoints();
+app.MapPaymentEndpoints();
+app.MapEmailEndpoints();
+app.MapInventoryEndpoints();
+
+// Coupon endpoints
+app.MapCouponsEndpoints();
+
+// Product Review endpoints
+app.MapProductReviewsEndpoints();
+
+// Wishlist endpoints
+app.MapWishlistsEndpoints();
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }))

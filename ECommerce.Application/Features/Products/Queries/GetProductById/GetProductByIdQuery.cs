@@ -6,7 +6,7 @@ namespace ECommerce.Application.Features.Products.Queries.GetProductById;
 /// <summary>
 /// ID'ye göre ürün getirme sorgusu
 /// </summary>
-public class GetProductByIdQuery : IQuery<ProductDto?>
+public class GetProductByIdQuery : IQuery<ProductDto>
 {
     /// <summary>
     /// Ürün ID'si

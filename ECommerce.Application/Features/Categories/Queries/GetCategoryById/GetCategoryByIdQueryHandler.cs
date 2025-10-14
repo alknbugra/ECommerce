@@ -8,7 +8,7 @@ namespace ECommerce.Application.Features.Categories.Queries.GetCategoryById;
 /// <summary>
 /// ID'ye göre kategori getirme sorgu handler'ı
 /// </summary>
-public class GetCategoryByIdQueryHandler : IQueryHandler<GetCategoryByIdQuery, CategoryDto?>
+public class GetCategoryByIdQueryHandler : IQueryHandler<GetCategoryByIdQuery, CategoryDto>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GetCategoryByIdQueryHandler> _logger;
@@ -21,47 +21,57 @@ public class GetCategoryByIdQueryHandler : IQueryHandler<GetCategoryByIdQuery, C
         _logger = logger;
     }
 
-    public async Task<CategoryDto?> HandleAsync(GetCategoryByIdQuery request, CancellationToken cancellationToken = default)
+    public async Task<Result<CategoryDto>> Handle(GetCategoryByIdQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Kategori getiriliyor: {Id}", request.Id);
-
-        var category = await _unitOfWork.Categories.GetByIdAsync(request.Id);
-        if (category == null)
+        try
         {
-            _logger.LogWarning("Kategori bulunamadı: {Id}", request.Id);
-            return null;
+            _logger.LogInformation("Kategori getiriliyor: {Id}", request.Id);
+
+            var category = await _unitOfWork.Categories.GetByIdAsync(request.Id);
+            if (category == null)
+            {
+                _logger.LogWarning("Kategori bulunamadı: {Id}", request.Id);
+                return Result.Failure<CategoryDto>(Error.NotFound("Category.NotFound", "Kategori bulunamadı."));
+            }
+
+            // Üst kategori adını al
+            string? parentCategoryName = null;
+            if (category.ParentCategoryId.HasValue)
+            {
+                var parentCategory = await _unitOfWork.Categories.GetByIdAsync(category.ParentCategoryId.Value);
+                parentCategoryName = parentCategory?.Name;
+            }
+
+            // Alt kategori sayısını al
+            var subCategoryCount = await _unitOfWork.Categories.CountAsync(c => c.ParentCategoryId == request.Id);
+
+            // Ürün sayısını al
+            var productCount = await _unitOfWork.Products.CountAsync(p => p.CategoryId == request.Id);
+
+            _logger.LogInformation("Kategori başarıyla getirildi: {Name} (ID: {Id})", category.Name, request.Id);
+
+            var categoryDto = new CategoryDto
+            {
+                Id = category.Id,
+                Name = category.Name,
+                Description = category.Description,
+                ImageUrl = category.ImageUrl,
+                ParentCategoryId = category.ParentCategoryId,
+                ParentCategoryName = parentCategoryName,
+                SortOrder = category.SortOrder,
+                IsActive = category.IsActive,
+                CreatedAt = category.CreatedAt,
+                UpdatedAt = category.UpdatedAt,
+                SubCategoryCount = subCategoryCount,
+                ProductCount = productCount
+            };
+
+            return Result.Success<CategoryDto>(categoryDto);
         }
-
-        // Üst kategori adını al
-        string? parentCategoryName = null;
-        if (category.ParentCategoryId.HasValue)
+        catch (Exception ex)
         {
-            var parentCategory = await _unitOfWork.Categories.GetByIdAsync(category.ParentCategoryId.Value);
-            parentCategoryName = parentCategory?.Name;
+            _logger.LogError(ex, "Kategori getirme sırasında hata oluştu: {Id}", request.Id);
+            return Result.Failure<CategoryDto>(Error.Problem("Category.GetCategoryByIdError", "Kategori getirme sırasında bir hata oluştu."));
         }
-
-        // Alt kategori sayısını al
-        var subCategoryCount = await _unitOfWork.Categories.CountAsync(c => c.ParentCategoryId == request.Id);
-
-        // Ürün sayısını al
-        var productCount = await _unitOfWork.Products.CountAsync(p => p.CategoryId == request.Id);
-
-        _logger.LogInformation("Kategori başarıyla getirildi: {Name} (ID: {Id})", category.Name, request.Id);
-
-        return new CategoryDto
-        {
-            Id = category.Id,
-            Name = category.Name,
-            Description = category.Description,
-            ImageUrl = category.ImageUrl,
-            ParentCategoryId = category.ParentCategoryId,
-            ParentCategoryName = parentCategoryName,
-            SortOrder = category.SortOrder,
-            IsActive = category.IsActive,
-            CreatedAt = category.CreatedAt,
-            UpdatedAt = category.UpdatedAt,
-            SubCategoryCount = subCategoryCount,
-            ProductCount = productCount
-        };
     }
 }

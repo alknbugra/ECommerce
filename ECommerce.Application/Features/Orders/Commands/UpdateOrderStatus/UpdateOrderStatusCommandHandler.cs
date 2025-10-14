@@ -23,29 +23,31 @@ public class UpdateOrderStatusCommandHandler : ICommandHandler<UpdateOrderStatus
         _logger = logger;
     }
 
-    public async Task<OrderDto> HandleAsync(UpdateOrderStatusCommand request, CancellationToken cancellationToken = default)
+    public async Task<Result<OrderDto>> Handle(UpdateOrderStatusCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Sipariş durumu güncelleniyor: {OrderId} -> {NewStatus}", request.OrderId, request.NewStatus);
-
-        // Siparişi bul
-        var order = await _unitOfWork.Orders.GetByIdAsync(request.OrderId);
-        if (order == null)
+        try
         {
-            throw new NotFoundException("Sipariş bulunamadı.");
-        }
+            _logger.LogInformation("Sipariş durumu güncelleniyor: {OrderId} -> {NewStatus}", request.OrderId, request.NewStatus);
 
-        // Geçerli durum kontrolü
-        var validStatuses = new[] { "Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled", "Returned" };
-        if (!validStatuses.Contains(request.NewStatus))
-        {
-            throw new BadRequestException($"Geçersiz sipariş durumu: {request.NewStatus}");
-        }
+            // Siparişi bul
+            var order = await _unitOfWork.Orders.GetByIdAsync(request.OrderId);
+            if (order == null)
+            {
+                return Result.Failure<OrderDto>(Error.NotFound("Order.NotFound", "Sipariş bulunamadı."));
+            }
 
-        // Durum geçiş kontrolü
-        if (!IsValidStatusTransition(order.Status, request.NewStatus))
-        {
-            throw new BadRequestException($"Geçersiz durum geçişi: {order.Status} -> {request.NewStatus}");
-        }
+            // Geçerli durum kontrolü
+            var validStatuses = new[] { "Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled", "Returned" };
+            if (!validStatuses.Contains(request.NewStatus))
+            {
+                return Result.Failure<OrderDto>(Error.Problem("Order.InvalidStatus", $"Geçersiz sipariş durumu: {request.NewStatus}"));
+            }
+
+            // Durum geçiş kontrolü
+            if (!IsValidStatusTransition(order.Status, request.NewStatus))
+            {
+                return Result.Failure<OrderDto>(Error.Problem("Order.InvalidStatusTransition", $"Geçersiz durum geçişi: {order.Status} -> {request.NewStatus}"));
+            }
 
         var previousStatus = order.Status;
 
@@ -91,7 +93,7 @@ public class UpdateOrderStatusCommandHandler : ICommandHandler<UpdateOrderStatus
         _logger.LogInformation("Sipariş durumu başarıyla güncellendi: {OrderNumber} -> {NewStatus}", order.OrderNumber, request.NewStatus);
 
         // DTO'ya dönüştür (basitleştirilmiş)
-        return new OrderDto
+        var orderDto = new OrderDto
         {
             Id = order.Id,
             OrderNumber = order.OrderNumber,
@@ -111,6 +113,14 @@ public class UpdateOrderStatusCommandHandler : ICommandHandler<UpdateOrderStatus
             ShippedDate = order.ShippedDate,
             DeliveredDate = order.DeliveredDate
         };
+
+        return Result.Success(orderDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Sipariş durumu güncelleme sırasında hata oluştu. OrderId: {OrderId}", request.OrderId);
+            return Result.Failure<OrderDto>(Error.Problem("Order.UpdateStatusError", "Sipariş durumu güncelleme sırasında bir hata oluştu."));
+        }
     }
 
     /// <summary>

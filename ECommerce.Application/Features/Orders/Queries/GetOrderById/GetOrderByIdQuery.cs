@@ -6,7 +6,7 @@ namespace ECommerce.Application.Features.Orders.Queries.GetOrderById;
 /// <summary>
 /// ID'ye göre sipariş getirme sorgusu
 /// </summary>
-public class GetOrderByIdQuery : IQuery<OrderDto?>
+public class GetOrderByIdQuery : IQuery<OrderDto>
 {
     /// <summary>
     /// Sipariş ID'si

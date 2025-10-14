@@ -6,7 +6,7 @@ namespace ECommerce.Application.Features.Users.Queries.GetUserById;
 /// <summary>
 /// ID'ye göre kullanıcı getirme sorgusu
 /// </summary>
-public class GetUserByIdQuery : IQuery<UserDto?>
+public class GetUserByIdQuery : IQuery<UserDto>
 {
     /// <summary>
     /// Kullanıcı ID'si

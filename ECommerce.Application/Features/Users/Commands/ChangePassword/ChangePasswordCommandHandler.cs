@@ -25,43 +25,51 @@ public class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordComman
         _logger = logger;
     }
 
-    public async Task<bool> HandleAsync(ChangePasswordCommand request, CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Kullanıcı şifresi değiştiriliyor: {UserId}", request.UserId);
-
-        // Kullanıcıyı bul
-        var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
-        if (user == null)
+        try
         {
-            throw new NotFoundException("Kullanıcı bulunamadı.");
-        }
+            _logger.LogInformation("Kullanıcı şifresi değiştiriliyor: {UserId}", request.UserId);
 
-        if (!user.IsActive)
+            // Kullanıcıyı bul
+            var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
+            if (user == null)
+            {
+                return Result.Failure<bool>(Error.NotFound("User", request.UserId.ToString()));
+            }
+
+            if (!user.IsActive)
+            {
+                return Result.Failure<bool>(Error.Validation("User", "Kullanıcı aktif değil."));
+            }
+
+            // Mevcut şifreyi doğrula
+            if (!_passwordService.VerifyPassword(request.CurrentPassword, user.PasswordHash))
+            {
+                return Result.Failure<bool>(Error.Validation("CurrentPassword", "Mevcut şifre yanlış."));
+            }
+
+            // Yeni şifre güçlülük kontrolü
+            if (!_passwordService.IsPasswordStrong(request.NewPassword))
+            {
+                return Result.Failure<bool>(Error.Validation("NewPassword", "Yeni şifre güçlülük gereksinimlerini karşılamıyor."));
+            }
+
+            // Yeni şifreyi hash'le ve kaydet
+            user.PasswordHash = _passwordService.HashPassword(request.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.CompleteAsync(cancellationToken);
+
+            _logger.LogInformation("Kullanıcı şifresi başarıyla değiştirildi: {Email}", user.Email);
+
+            return Result.Success(true);
+        }
+        catch (Exception ex)
         {
-            throw new BadRequestException("Kullanıcı aktif değil.");
+            _logger.LogError(ex, "Kullanıcı şifresi değiştirilirken hata oluştu: {UserId}", request.UserId);
+            return Result.Failure<bool>(Error.Failure("ChangePassword.Failed", $"Şifre değiştirilirken hata oluştu: {ex.Message}"));
         }
-
-        // Mevcut şifreyi doğrula
-        if (!_passwordService.VerifyPassword(request.CurrentPassword, user.PasswordHash))
-        {
-            throw new BadRequestException("Mevcut şifre yanlış.");
-        }
-
-        // Yeni şifre güçlülük kontrolü
-        if (!_passwordService.IsPasswordStrong(request.NewPassword))
-        {
-            throw new BadRequestException("Yeni şifre güçlülük gereksinimlerini karşılamıyor.");
-        }
-
-        // Yeni şifreyi hash'le ve kaydet
-        user.PasswordHash = _passwordService.HashPassword(request.NewPassword);
-        user.UpdatedAt = DateTime.UtcNow;
-
-        await _unitOfWork.Users.UpdateAsync(user);
-        await _unitOfWork.CompleteAsync(cancellationToken);
-
-        _logger.LogInformation("Kullanıcı şifresi başarıyla değiştirildi: {Email}", user.Email);
-
-        return true;
     }
 }

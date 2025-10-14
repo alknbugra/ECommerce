@@ -20,49 +20,56 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
         _mapper = mapper;
     }
 
-    public async Task<ProductDto> HandleAsync(CreateProductCommand request, CancellationToken cancellationToken = default)
+    public async Task<Result<ProductDto>> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
-        // Kategori var mı kontrol et
-        var category = await _unitOfWork.Categories.GetByIdAsync(request.CategoryId);
-        if (category == null)
+        try
         {
-            throw new Common.Exceptions.NotFoundException("Category", request.CategoryId);
+            // Kategori var mı kontrol et
+            var category = await _unitOfWork.Categories.GetByIdAsync(request.CategoryId);
+            if (category == null)
+            {
+                return Result.Failure<ProductDto>(Error.NotFound("Category", request.CategoryId.ToString()));
+            }
+
+            // SKU benzersiz mi kontrol et
+            var existingProduct = await _unitOfWork.Products.FirstOrDefaultAsync(p => p.Sku == request.Sku);
+            if (existingProduct != null)
+            {
+                return Result.Failure<ProductDto>(Error.Validation("SKU", $"SKU '{request.Sku}' zaten kullanılıyor."));
+            }
+
+            // Ürün oluştur
+            var product = new Product
+            {
+                Name = request.Name,
+                Description = request.Description,
+                ShortDescription = request.ShortDescription,
+                Sku = request.Sku,
+                Price = request.Price,
+                DiscountedPrice = request.DiscountedPrice,
+                StockQuantity = request.StockQuantity,
+                MinStockLevel = request.MinStockLevel,
+                Weight = request.Weight,
+                Length = request.Length,
+                Width = request.Width,
+                Height = request.Height,
+                MainImageUrl = request.MainImageUrl,
+                CategoryId = request.CategoryId,
+                IsActive = request.IsActive
+            };
+
+            await _unitOfWork.Products.AddAsync(product);
+            await _unitOfWork.SaveChangesAsync();
+
+            // DTO'ya dönüştür
+            var productDto = _mapper.Map<ProductDto>(product);
+            productDto.CategoryName = category.Name;
+
+            return Result.Success(productDto);
         }
-
-        // SKU benzersiz mi kontrol et
-        var existingProduct = await _unitOfWork.Products.FirstOrDefaultAsync(p => p.Sku == request.Sku);
-        if (existingProduct != null)
+        catch (Exception ex)
         {
-            throw new Common.Exceptions.BadRequestException($"SKU '{request.Sku}' zaten kullanılıyor.");
+            return Result.Failure<ProductDto>(Error.Failure("CreateProduct.Failed", $"Ürün oluşturulurken hata oluştu: {ex.Message}"));
         }
-
-        // Ürün oluştur
-        var product = new Product
-        {
-            Name = request.Name,
-            Description = request.Description,
-            ShortDescription = request.ShortDescription,
-            Sku = request.Sku,
-            Price = request.Price,
-            DiscountedPrice = request.DiscountedPrice,
-            StockQuantity = request.StockQuantity,
-            MinStockLevel = request.MinStockLevel,
-            Weight = request.Weight,
-            Length = request.Length,
-            Width = request.Width,
-            Height = request.Height,
-            MainImageUrl = request.MainImageUrl,
-            CategoryId = request.CategoryId,
-            IsActive = request.IsActive
-        };
-
-        await _unitOfWork.Products.AddAsync(product);
-        await _unitOfWork.SaveChangesAsync();
-
-        // DTO'ya dönüştür
-        var productDto = _mapper.Map<ProductDto>(product);
-        productDto.CategoryName = category.Name;
-
-        return productDto;
     }
 }

@@ -54,4 +54,9 @@ public class OrderItemDto
     /// Ürün resmi URL'si
     /// </summary>
     public string? ProductImageUrl { get; set; }
+
+    /// <summary>
+    /// Ürün kategorileri
+    /// </summary>
+    public List<Guid>? ProductCategories { get; set; }
 }

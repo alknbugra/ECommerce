@@ -21,10 +21,12 @@ public class GetCategoriesQueryHandler : IQueryHandler<GetCategoriesQuery, List<
         _logger = logger;
     }
 
-    public async Task<List<CategoryDto>> HandleAsync(GetCategoriesQuery request, CancellationToken cancellationToken = default)
+    public async Task<Result<List<CategoryDto>>> Handle(GetCategoriesQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Kategoriler getiriliyor - ParentCategoryId: {ParentCategoryId}, IsActive: {IsActive}", 
-            request.ParentCategoryId, request.IsActive);
+        try
+        {
+            _logger.LogInformation("Kategoriler getiriliyor - ParentCategoryId: {ParentCategoryId}, IsActive: {IsActive}", 
+                request.ParentCategoryId, request.IsActive);
 
         var categories = await _unitOfWork.Categories.GetAllAsync();
 
@@ -111,6 +113,12 @@ public class GetCategoriesQueryHandler : IQueryHandler<GetCategoriesQuery, List<
 
         _logger.LogInformation("{Count} kategori getirildi", categoryDtos.Count);
 
-        return categoryDtos;
+        return Result.Success<List<CategoryDto>>(categoryDtos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Kategoriler getirme sırasında hata oluştu");
+            return Result.Failure<List<CategoryDto>>(Error.Problem("Category.GetCategoriesError", "Kategoriler getirme sırasında bir hata oluştu."));
+        }
     }
 }

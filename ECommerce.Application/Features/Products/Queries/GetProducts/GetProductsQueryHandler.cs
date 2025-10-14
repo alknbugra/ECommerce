@@ -20,98 +20,105 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, List<Prod
         _mapper = mapper;
     }
 
-    public async Task<List<ProductDto>> HandleAsync(GetProductsQuery request, CancellationToken cancellationToken = default)
+    public async Task<Result<List<ProductDto>>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
-        // Filtreleme koşulları
-        var filters = new List<Expression<Func<Domain.Entities.Product, bool>>>();
-
-        if (request.CategoryId.HasValue)
+        try
         {
-            filters.Add(p => p.CategoryId == request.CategoryId.Value);
-        }
+            // Filtreleme koşulları
+            var filters = new List<Expression<Func<Domain.Entities.Product, bool>>>();
 
-        if (!string.IsNullOrEmpty(request.SearchTerm))
-        {
-            var searchTerm = request.SearchTerm.ToLower();
-            filters.Add(p => p.Name.ToLower().Contains(searchTerm) || 
-                           (p.Description != null && p.Description.ToLower().Contains(searchTerm)) ||
-                           p.Sku.ToLower().Contains(searchTerm));
-        }
-
-        if (request.IsActive.HasValue)
-        {
-            filters.Add(p => p.IsActive == request.IsActive.Value);
-        }
-
-        if (request.InStock.HasValue && request.InStock.Value)
-        {
-            filters.Add(p => p.StockQuantity > 0);
-        }
-
-        // Tüm ürünleri getir (şimdilik basit implementasyon)
-        var products = await _unitOfWork.Products.GetAllAsync();
-
-        // Filtreleri uygula
-        var filteredProducts = products.AsQueryable();
-        
-        foreach (var filter in filters)
-        {
-            filteredProducts = filteredProducts.Where(filter);
-        }
-
-        // Sıralama
-        if (!string.IsNullOrEmpty(request.SortBy))
-        {
-            switch (request.SortBy.ToLower())
+            if (request.CategoryId.HasValue)
             {
-                case "name":
-                    filteredProducts = request.SortDirection?.ToLower() == "desc" 
-                        ? filteredProducts.OrderByDescending(p => p.Name)
-                        : filteredProducts.OrderBy(p => p.Name);
-                    break;
-                case "price":
-                    filteredProducts = request.SortDirection?.ToLower() == "desc" 
-                        ? filteredProducts.OrderByDescending(p => p.Price)
-                        : filteredProducts.OrderBy(p => p.Price);
-                    break;
-                case "createdat":
-                    filteredProducts = request.SortDirection?.ToLower() == "desc" 
-                        ? filteredProducts.OrderByDescending(p => p.CreatedAt)
-                        : filteredProducts.OrderBy(p => p.CreatedAt);
-                    break;
-                default:
-                    filteredProducts = filteredProducts.OrderBy(p => p.Name);
-                    break;
+                filters.Add(p => p.CategoryId == request.CategoryId.Value);
             }
-        }
-        else
-        {
-            filteredProducts = filteredProducts.OrderBy(p => p.Name);
-        }
 
-        // Sayfalama
-        var pagedProducts = filteredProducts
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .ToList();
+            if (!string.IsNullOrEmpty(request.SearchTerm))
+            {
+                var searchTerm = request.SearchTerm.ToLower();
+                filters.Add(p => p.Name.ToLower().Contains(searchTerm) || 
+                               (p.Description != null && p.Description.ToLower().Contains(searchTerm)) ||
+                               p.Sku.ToLower().Contains(searchTerm));
+            }
 
-        // DTO'ya dönüştür
-        var productDtos = _mapper.Map<List<ProductDto>>(pagedProducts);
+            if (request.IsActive.HasValue)
+            {
+                filters.Add(p => p.IsActive == request.IsActive.Value);
+            }
 
-        // Kategori adlarını ve resimleri doldur
-        foreach (var productDto in productDtos)
-        {
-            var product = pagedProducts.First(p => p.Id == productDto.Id);
+            if (request.InStock.HasValue && request.InStock.Value)
+            {
+                filters.Add(p => p.StockQuantity > 0);
+            }
+
+            // Tüm ürünleri getir (şimdilik basit implementasyon)
+            var products = await _unitOfWork.Products.GetAllAsync();
+
+            // Filtreleri uygula
+            var filteredProducts = products.AsQueryable();
             
-            if (product.Category != null)
+            foreach (var filter in filters)
             {
-                productDto.CategoryName = product.Category.Name;
+                filteredProducts = filteredProducts.Where(filter);
             }
 
-            var images = await _unitOfWork.ProductImages.FindAsync(img => img.ProductId == product.Id);
-            productDto.Images = _mapper.Map<List<ProductImageDto>>(images);
-        }
+            // Sıralama
+            if (!string.IsNullOrEmpty(request.SortBy))
+            {
+                switch (request.SortBy.ToLower())
+                {
+                    case "name":
+                        filteredProducts = request.SortDirection?.ToLower() == "desc" 
+                            ? filteredProducts.OrderByDescending(p => p.Name)
+                            : filteredProducts.OrderBy(p => p.Name);
+                        break;
+                    case "price":
+                        filteredProducts = request.SortDirection?.ToLower() == "desc" 
+                            ? filteredProducts.OrderByDescending(p => p.Price)
+                            : filteredProducts.OrderBy(p => p.Price);
+                        break;
+                    case "createdat":
+                        filteredProducts = request.SortDirection?.ToLower() == "desc" 
+                            ? filteredProducts.OrderByDescending(p => p.CreatedAt)
+                            : filteredProducts.OrderBy(p => p.CreatedAt);
+                        break;
+                    default:
+                        filteredProducts = filteredProducts.OrderBy(p => p.Name);
+                        break;
+                }
+            }
+            else
+            {
+                filteredProducts = filteredProducts.OrderBy(p => p.Name);
+            }
 
-        return productDtos;
+            // Sayfalama
+            var pagedProducts = filteredProducts
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToList();
+
+            // DTO'ya dönüştür
+            var productDtos = _mapper.Map<List<ProductDto>>(pagedProducts);
+
+            // Kategori adlarını ve resimleri doldur
+            foreach (var productDto in productDtos)
+            {
+                var product = pagedProducts.First(p => p.Id == productDto.Id);
+                
+                if (product.Category != null)
+                {
+                    productDto.CategoryName = product.Category.Name;
+                }
+
+                var images = await _unitOfWork.ProductImages.FindAsync(img => img.ProductId == product.Id);
+                productDto.Images = _mapper.Map<List<ProductImageDto>>(images);
+            }
+
+            return Result.Success(productDtos);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<List<ProductDto>>(Error.Failure("GetProducts.Failed", $"Ürünler getirilirken hata oluştu: {ex.Message}"));
+        }
     }
 }

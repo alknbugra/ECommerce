@@ -9,7 +9,7 @@ namespace ECommerce.Application.Features.RolePermissions.Queries.GetRolePermissi
 /// <summary>
 /// Rol yetkilerini getirme sorgu handler'ı
 /// </summary>
-public class GetRolePermissionsQueryHandler : IQueryHandler<GetRolePermissionsQuery, IEnumerable<RolePermissionDto>>
+public class GetRolePermissionsQueryHandler : IQueryHandler<GetRolePermissionsQuery, List<RolePermissionDto>>
 {
     private readonly IRolePermissionRepository _rolePermissionRepository;
     private readonly ILogger<GetRolePermissionsQueryHandler> _logger;
@@ -22,44 +22,52 @@ public class GetRolePermissionsQueryHandler : IQueryHandler<GetRolePermissionsQu
         _logger = logger;
     }
 
-    public async Task<IEnumerable<RolePermissionDto>> HandleAsync(GetRolePermissionsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<RolePermissionDto>>> Handle(GetRolePermissionsQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Rol yetkileri getiriliyor. Rol ID: {RoleId}, Sadece Aktif: {OnlyActive}", 
-            request.RoleId, request.OnlyActive);
-
-        IEnumerable<Domain.Entities.RolePermission> rolePermissions;
-
-        if (request.RoleId.HasValue)
+        try
         {
-            rolePermissions = await _rolePermissionRepository.GetByRoleIdAsync(request.RoleId.Value);
+            _logger.LogInformation("Rol yetkileri getiriliyor. Rol ID: {RoleId}, Sadece Aktif: {OnlyActive}", 
+                request.RoleId, request.OnlyActive);
+
+            IEnumerable<Domain.Entities.RolePermission> rolePermissions;
+
+            if (request.RoleId.HasValue)
+            {
+                rolePermissions = await _rolePermissionRepository.GetByRoleIdAsync(request.RoleId.Value);
+            }
+            else if (request.OnlyActive)
+            {
+                rolePermissions = await _rolePermissionRepository.GetActiveRolePermissionsAsync();
+            }
+            else
+            {
+                rolePermissions = await _rolePermissionRepository.GetAllAsync();
+            }
+
+            var rolePermissionDtos = rolePermissions.Select(rp => new RolePermissionDto
+            {
+                Id = rp.Id,
+                RoleId = rp.RoleId,
+                RoleName = rp.Role?.Name ?? string.Empty,
+                PermissionId = rp.PermissionId,
+                PermissionName = rp.Permission?.Name ?? string.Empty,
+                PermissionCategory = rp.Permission?.Category ?? string.Empty,
+                PermissionAction = rp.Permission?.Action ?? string.Empty,
+                PermissionResource = rp.Permission?.Resource ?? string.Empty,
+                AssignedDate = rp.AssignedDate,
+                AssignedBy = rp.AssignedBy,
+                IsActive = rp.IsActive,
+                ExpiresAt = rp.ExpiresAt
+            });
+
+            _logger.LogInformation("{Count} rol yetki ilişkisi getirildi.", rolePermissionDtos.Count());
+
+            return Result.Success<List<RolePermissionDto>>(rolePermissionDtos.ToList());
         }
-        else if (request.OnlyActive)
+        catch (Exception ex)
         {
-            rolePermissions = await _rolePermissionRepository.GetActiveRolePermissionsAsync();
+            _logger.LogError(ex, "Rol yetkileri getirme sırasında hata oluştu");
+            return Result.Failure<List<RolePermissionDto>>(Error.Problem("RolePermission.GetRolePermissionsError", "Rol yetkileri getirme sırasında bir hata oluştu."));
         }
-        else
-        {
-            rolePermissions = await _rolePermissionRepository.GetAllAsync();
-        }
-
-        var rolePermissionDtos = rolePermissions.Select(rp => new RolePermissionDto
-        {
-            Id = rp.Id,
-            RoleId = rp.RoleId,
-            RoleName = rp.Role?.Name ?? string.Empty,
-            PermissionId = rp.PermissionId,
-            PermissionName = rp.Permission?.Name ?? string.Empty,
-            PermissionCategory = rp.Permission?.Category ?? string.Empty,
-            PermissionAction = rp.Permission?.Action ?? string.Empty,
-            PermissionResource = rp.Permission?.Resource ?? string.Empty,
-            AssignedDate = rp.AssignedDate,
-            AssignedBy = rp.AssignedBy,
-            IsActive = rp.IsActive,
-            ExpiresAt = rp.ExpiresAt
-        });
-
-        _logger.LogInformation("{Count} rol yetki ilişkisi getirildi.", rolePermissionDtos.Count());
-
-        return rolePermissionDtos;
     }
 }

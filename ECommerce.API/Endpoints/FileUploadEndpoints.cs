@@ -1,4 +1,5 @@
 using ECommerce.Application.Common.Interfaces;
+using ECommerce.Application.Common.Messaging;
 using ECommerce.Application.DTOs;
 using ECommerce.Application.Features.Products.Commands.UploadProductImage;
 using ECommerce.Application.Features.Products.Commands.DeleteProductImage;
@@ -118,7 +119,7 @@ public static class FileUploadEndpoints
             SortOrder = request.SortOrder
         };
 
-        var result = await handler.HandleAsync(command, cancellationToken);
+        var result = await handler.Handle(command, cancellationToken);
         return Results.CreatedAtRoute("GetProductById", new { id = productId }, result);
     }
 
@@ -143,7 +144,7 @@ public static class FileUploadEndpoints
             UserId = userId.Value
         };
 
-        var result = await handler.HandleAsync(command, cancellationToken);
+        var result = await handler.Handle(command, cancellationToken);
         return Results.Ok(result);
     }
 

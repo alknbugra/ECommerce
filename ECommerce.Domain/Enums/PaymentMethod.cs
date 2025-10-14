@@ -1,7 +1,7 @@
 namespace ECommerce.Domain.Enums;
 
 /// <summary>
-/// Ödeme yöntemleri
+/// Ödeme yöntemi enum'u
 /// </summary>
 public enum PaymentMethod
 {
@@ -16,14 +16,14 @@ public enum PaymentMethod
     DebitCard = 1,
 
     /// <summary>
-    /// Kapıda ödeme
+    /// Havale/EFT
     /// </summary>
-    CashOnDelivery = 2,
+    BankTransfer = 2,
 
     /// <summary>
-    /// Banka havalesi
+    /// Kapıda ödeme
     /// </summary>
-    BankTransfer = 3,
+    CashOnDelivery = 3,
 
     /// <summary>
     /// Dijital cüzdan

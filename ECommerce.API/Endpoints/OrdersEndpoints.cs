@@ -1,4 +1,5 @@
 using ECommerce.Application.Common.Interfaces;
+using ECommerce.Application.Common.Messaging;
 using ECommerce.Application.DTOs;
 using ECommerce.Application.Features.Orders.Commands.CreateOrder;
 using ECommerce.Application.Features.Orders.Commands.UpdateOrderStatus;
@@ -115,7 +116,7 @@ public static class OrdersEndpoints
             SortDirection = request.SortDirection
         };
 
-        var orders = await handler.HandleAsync(query, cancellationToken);
+        var orders = await handler.Handle(query, cancellationToken);
         return Results.Ok(orders);
     }
 
@@ -148,7 +149,7 @@ public static class OrdersEndpoints
             SortDirection = request.SortDirection
         };
 
-        var orders = await handler.HandleAsync(query, cancellationToken);
+        var orders = await handler.Handle(query, cancellationToken);
         return Results.Ok(orders);
     }
 
@@ -168,7 +169,7 @@ public static class OrdersEndpoints
             UserId = userId // Güvenlik için kullanıcı ID'si kontrol edilir
         };
 
-        var order = await handler.HandleAsync(query, cancellationToken);
+        var order = await handler.Handle(query, cancellationToken);
         if (order == null)
         {
             return Results.NotFound($"ID'si {id} olan sipariş bulunamadı.");
@@ -193,8 +194,11 @@ public static class OrdersEndpoints
         }
 
         command.UserId = userId.Value;
-        var order = await handler.HandleAsync(command, cancellationToken);
-        return Results.CreatedAtRoute("GetOrderById", new { id = order.Id }, order);
+        var result = await handler.Handle(command, cancellationToken);
+        if (result.IsFailure)
+            return Results.BadRequest(result.Error);
+        
+        return Results.CreatedAtRoute("GetOrderById", new { id = result.Value.Id }, result.Value);
     }
 
     /// <summary>
@@ -223,7 +227,7 @@ public static class OrdersEndpoints
             ShippingCompany = request.ShippingCompany
         };
 
-        var order = await handler.HandleAsync(command, cancellationToken);
+        var order = await handler.Handle(command, cancellationToken);
         return Results.Ok(order);
     }
 
@@ -251,7 +255,7 @@ public static class OrdersEndpoints
             ChangedByUserId = userId.Value
         };
 
-        var order = await handler.HandleAsync(command, cancellationToken);
+        var order = await handler.Handle(command, cancellationToken);
         return Results.Ok(order);
     }
 

@@ -2,6 +2,7 @@ using ECommerce.Domain.Interfaces;
 using ECommerce.Infrastructure.Data;
 using ECommerce.Infrastructure.Repositories;
 using ECommerce.Infrastructure.Services;
+using ECommerce.Infrastructure.Configuration;
 using ECommerce.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -50,6 +51,9 @@ public static class DependencyInjection
 
         // Seed Data Service'i ekle
         services.AddHostedService<SeedDataService>();
+
+        // Favori liste servislerini ekle
+        services.AddWishlistServices(configuration);
 
         return services;
     }

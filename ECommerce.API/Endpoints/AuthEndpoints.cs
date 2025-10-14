@@ -1,4 +1,5 @@
 using ECommerce.Application.Common.Interfaces;
+using ECommerce.Application.Common.Messaging;
 using ECommerce.Application.DTOs;
 using ECommerce.Application.Features.Auth.Commands.Login;
 using ECommerce.Application.Features.Auth.Commands.Register;
@@ -67,7 +68,7 @@ public static class AuthEndpoints
         [FromServices] ICommandHandler<LoginCommand, AuthResponseDto> handler,
         CancellationToken cancellationToken = default)
     {
-        var result = await handler.HandleAsync(command, cancellationToken);
+        var result = await handler.Handle(command, cancellationToken);
         return Results.Ok(result);
     }
 
@@ -79,7 +80,7 @@ public static class AuthEndpoints
         [FromServices] ICommandHandler<RegisterCommand, AuthResponseDto> handler,
         CancellationToken cancellationToken = default)
     {
-        var result = await handler.HandleAsync(command, cancellationToken);
+        var result = await handler.Handle(command, cancellationToken);
         return Results.CreatedAtRoute("Login", result);
     }
 
@@ -96,7 +97,7 @@ public static class AuthEndpoints
             RefreshToken = request.RefreshToken
         };
 
-        var result = await handler.HandleAsync(command, cancellationToken);
+        var result = await handler.Handle(command, cancellationToken);
         return Results.Ok(result);
     }
 

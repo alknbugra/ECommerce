@@ -1,7 +1,7 @@
 namespace ECommerce.Domain.Enums;
 
 /// <summary>
-/// Ödeme durumları
+/// Ödeme durumu enum'u
 /// </summary>
 public enum PaymentStatus
 {
@@ -13,7 +13,7 @@ public enum PaymentStatus
     /// <summary>
     /// Başarılı
     /// </summary>
-    Completed = 1,
+    Success = 1,
 
     /// <summary>
     /// Başarısız
@@ -33,5 +33,10 @@ public enum PaymentStatus
     /// <summary>
     /// Kısmi iade
     /// </summary>
-    PartiallyRefunded = 5
+    PartiallyRefunded = 5,
+
+    /// <summary>
+    /// 3D Secure bekliyor
+    /// </summary>
+    WaitingFor3DSecure = 6
 }

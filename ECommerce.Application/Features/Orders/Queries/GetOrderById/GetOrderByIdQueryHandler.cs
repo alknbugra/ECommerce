@@ -9,7 +9,7 @@ namespace ECommerce.Application.Features.Orders.Queries.GetOrderById;
 /// <summary>
 /// ID'ye göre sipariş getirme sorgu handler'ı
 /// </summary>
-public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDto?>
+public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDto>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GetOrderByIdQueryHandler> _logger;
@@ -22,23 +22,25 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
         _logger = logger;
     }
 
-    public async Task<OrderDto?> HandleAsync(GetOrderByIdQuery request, CancellationToken cancellationToken = default)
+    public async Task<Result<OrderDto>> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Sipariş getiriliyor: {Id}", request.Id);
-
-        var order = await _unitOfWork.Orders.GetByIdAsync(request.Id);
-        if (order == null)
+        try
         {
-            _logger.LogWarning("Sipariş bulunamadı: {Id}", request.Id);
-            return null;
-        }
+            _logger.LogInformation("Sipariş getiriliyor: {Id}", request.Id);
 
-        // Kullanıcı kontrolü (sadece kendi siparişini görebilir veya admin)
-        if (request.UserId.HasValue && order.UserId != request.UserId.Value)
-        {
-            _logger.LogWarning("Sipariş erişim yetkisi yok: {Id}, UserId: {UserId}", request.Id, request.UserId);
-            throw new ForbiddenException("Bu siparişe erişim yetkiniz yok.");
-        }
+            var order = await _unitOfWork.Orders.GetByIdAsync(request.Id);
+            if (order == null)
+            {
+                _logger.LogWarning("Sipariş bulunamadı: {Id}", request.Id);
+                return Result.Failure<OrderDto>(Error.NotFound("Order.NotFound", "Sipariş bulunamadı."));
+            }
+
+            // Kullanıcı kontrolü (sadece kendi siparişini görebilir veya admin)
+            if (request.UserId.HasValue && order.UserId != request.UserId.Value)
+            {
+                _logger.LogWarning("Sipariş erişim yetkisi yok: {Id}, UserId: {UserId}", request.Id, request.UserId);
+                return Result.Failure<OrderDto>(Error.Problem("Order.AccessDenied", "Bu siparişe erişim yetkiniz yok."));
+            }
 
         // Kullanıcı bilgilerini al
         var user = await _unitOfWork.Users.GetByIdAsync(order.UserId);
@@ -113,7 +115,7 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
 
         _logger.LogInformation("Sipariş başarıyla getirildi: {OrderNumber} (ID: {Id})", order.OrderNumber, request.Id);
 
-        return new OrderDto
+        var orderDto = new OrderDto
         {
             Id = order.Id,
             OrderNumber = order.OrderNumber,
@@ -155,5 +157,13 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
             OrderItems = orderItemDtos,
             StatusHistory = statusHistoryDtos
         };
+
+        return Result.Success(orderDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Sipariş getirme sırasında hata oluştu: {Id}", request.Id);
+            return Result.Failure<OrderDto>(Error.Problem("Order.GetOrderByIdError", "Sipariş getirme sırasında bir hata oluştu."));
+        }
     }
 }

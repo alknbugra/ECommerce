@@ -21,9 +21,11 @@ public class GetOrdersQueryHandler : IQueryHandler<GetOrdersQuery, List<OrderDto
         _logger = logger;
     }
 
-    public async Task<List<OrderDto>> HandleAsync(GetOrdersQuery request, CancellationToken cancellationToken = default)
+    public async Task<Result<List<OrderDto>>> Handle(GetOrdersQuery request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Siparişler getiriliyor - UserId: {UserId}, Status: {Status}", request.UserId, request.Status);
+        try
+        {
+            _logger.LogInformation("Siparişler getiriliyor - UserId: {UserId}, Status: {Status}", request.UserId, request.Status);
 
         var orders = await _unitOfWork.Orders.GetAllAsync();
 
@@ -119,6 +121,12 @@ public class GetOrdersQueryHandler : IQueryHandler<GetOrdersQuery, List<OrderDto
 
         _logger.LogInformation("{Count} sipariş getirildi", orderDtos.Count);
 
-        return orderDtos;
+        return Result.Success<List<OrderDto>>(orderDtos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Siparişler getirme sırasında hata oluştu");
+            return Result.Failure<List<OrderDto>>(Error.Problem("Order.GetOrdersError", "Siparişler getirme sırasında bir hata oluştu."));
+        }
     }
 }

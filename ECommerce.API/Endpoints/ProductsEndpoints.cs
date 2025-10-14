@@ -1,4 +1,5 @@
 using ECommerce.Application.Common.Interfaces;
+using ECommerce.Application.Common.Messaging;
 using ECommerce.Application.DTOs;
 using ECommerce.Application.Features.Products.Commands.CreateProduct;
 using ECommerce.Application.Features.Products.Queries.GetProductById;
@@ -70,7 +71,7 @@ public static class ProductsEndpoints
             SortDirection = request.SortDirection
         };
 
-        var products = await handler.HandleAsync(query, cancellationToken);
+        var products = await handler.Handle(query, cancellationToken);
         return Results.Ok(products);
     }
 
@@ -83,7 +84,7 @@ public static class ProductsEndpoints
         CancellationToken cancellationToken = default)
     {
         var query = new GetProductByIdQuery { Id = id };
-        var product = await handler.HandleAsync(query, cancellationToken);
+        var product = await handler.Handle(query, cancellationToken);
 
         if (product == null)
         {
@@ -101,8 +102,11 @@ public static class ProductsEndpoints
         [FromServices] ICommandHandler<CreateProductCommand, ProductDto> handler,
         CancellationToken cancellationToken = default)
     {
-        var product = await handler.HandleAsync(command, cancellationToken);
-        return Results.CreatedAtRoute("GetProductById", new { id = product.Id }, product);
+        var result = await handler.Handle(command, cancellationToken);
+        if (result.IsFailure)
+            return Results.BadRequest(result.Error);
+        
+        return Results.CreatedAtRoute("GetProductById", new { id = result.Value.Id }, result.Value);
     }
 
     /// <summary>

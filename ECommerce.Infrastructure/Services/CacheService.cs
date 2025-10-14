@@ -44,7 +44,7 @@ public class CacheService : ICacheService
         }
     }
 
-    public async Task<T?> GetAsync<T>(string key) where T : class
+    public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
     {
         return await Task.FromResult(Get<T>(key));
     }
@@ -72,9 +72,9 @@ public class CacheService : ICacheService
         }
     }
 
-    public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null) where T : class
+    public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
     {
-        await Task.Run(() => Set(key, value, expiration));
+        await Task.Run(() => Set(key, value, expiration), cancellationToken);
     }
 
     public void Remove(string key)

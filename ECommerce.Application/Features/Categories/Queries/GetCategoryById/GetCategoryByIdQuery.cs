@@ -6,7 +6,7 @@ namespace ECommerce.Application.Features.Categories.Queries.GetCategoryById;
 /// <summary>
 /// ID'ye göre kategori getirme sorgusu
 /// </summary>
-public class GetCategoryByIdQuery : IQuery<CategoryDto?>
+public class GetCategoryByIdQuery : IQuery<CategoryDto>
 {
     /// <summary>
     /// Kategori ID'si

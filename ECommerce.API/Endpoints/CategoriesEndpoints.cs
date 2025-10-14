@@ -1,4 +1,5 @@
 using ECommerce.Application.Common.Interfaces;
+using ECommerce.Application.Common.Messaging;
 using ECommerce.Application.DTOs;
 using ECommerce.Application.Features.Categories.Commands.CreateCategory;
 using ECommerce.Application.Features.Categories.Commands.UpdateCategory;
@@ -107,7 +108,7 @@ public static class CategoriesEndpoints
             SortDirection = request.SortDirection
         };
 
-        var categories = await handler.HandleAsync(query, cancellationToken);
+        var categories = await handler.Handle(query, cancellationToken);
         return Results.Ok(categories);
     }
 
@@ -120,7 +121,7 @@ public static class CategoriesEndpoints
         CancellationToken cancellationToken = default)
     {
         var query = new GetCategoryByIdQuery { Id = id };
-        var category = await handler.HandleAsync(query, cancellationToken);
+        var category = await handler.Handle(query, cancellationToken);
 
         if (category == null)
         {
@@ -144,7 +145,7 @@ public static class CategoriesEndpoints
             IsActive = true // Sadece aktif alt kategoriler
         };
 
-        var subCategories = await handler.HandleAsync(query, cancellationToken);
+        var subCategories = await handler.Handle(query, cancellationToken);
         return Results.Ok(subCategories);
     }
 
@@ -156,8 +157,11 @@ public static class CategoriesEndpoints
         [FromServices] ICommandHandler<CreateCategoryCommand, CategoryDto> handler,
         CancellationToken cancellationToken = default)
     {
-        var category = await handler.HandleAsync(command, cancellationToken);
-        return Results.CreatedAtRoute("GetCategoryById", new { id = category.Id }, category);
+        var result = await handler.Handle(command, cancellationToken);
+        if (result.IsFailure)
+            return Results.BadRequest(result.Error);
+        
+        return Results.CreatedAtRoute("GetCategoryById", new { id = result.Value.Id }, result.Value);
     }
 
     /// <summary>
@@ -170,7 +174,7 @@ public static class CategoriesEndpoints
         CancellationToken cancellationToken = default)
     {
         command.Id = id;
-        var category = await handler.HandleAsync(command, cancellationToken);
+        var category = await handler.Handle(command, cancellationToken);
         return Results.Ok(category);
     }
 
@@ -183,7 +187,7 @@ public static class CategoriesEndpoints
         CancellationToken cancellationToken = default)
     {
         var command = new DeleteCategoryCommand { Id = id };
-        var result = await handler.HandleAsync(command, cancellationToken);
+        var result = await handler.Handle(command, cancellationToken);
         return Results.Ok(result);
     }
 
