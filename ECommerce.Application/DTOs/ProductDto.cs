@@ -46,6 +46,31 @@ public class ProductDto
     public int StockQuantity { get; set; }
 
     /// <summary>
+    /// Minimum stok seviyesi
+    /// </summary>
+    public int MinStockLevel { get; set; }
+
+    /// <summary>
+    /// Ağırlık
+    /// </summary>
+    public decimal? Weight { get; set; }
+
+    /// <summary>
+    /// Uzunluk
+    /// </summary>
+    public decimal? Length { get; set; }
+
+    /// <summary>
+    /// Genişlik
+    /// </summary>
+    public decimal? Width { get; set; }
+
+    /// <summary>
+    /// Yükseklik
+    /// </summary>
+    public decimal? Height { get; set; }
+
+    /// <summary>
     /// Ana resim URL'si
     /// </summary>
     public string? MainImageUrl { get; set; }
@@ -59,6 +84,16 @@ public class ProductDto
     /// Kategori adı
     /// </summary>
     public string CategoryName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Marka ID'si
+    /// </summary>
+    public Guid? BrandId { get; set; }
+
+    /// <summary>
+    /// Marka adı
+    /// </summary>
+    public string? BrandName { get; set; }
 
     /// <summary>
     /// Ürün aktif mi?
@@ -84,4 +119,9 @@ public class ProductDto
     /// Oluşturulma tarihi
     /// </summary>
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Güncellenme tarihi
+    /// </summary>
+    public DateTime UpdatedAt { get; set; }
 }

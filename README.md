@@ -747,7 +747,7 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 **İsmail Özer**
 
 - GitHub: [@ismailoze](https://github.com/ismailoze)
-- LinkedIn: [linkedin.com/in/ismailoze](https://linkedin.com/in/ismailoze)
+- LinkedIn: [linkedin.com/in/ismail-ozer-07-antalya](https://www.linkedin.com/in/ismail-ozer-07-antalya)
 - Email: ismailozer35041@gmail.com
 
 ## 🙏 Teşekkürler

@@ -2,6 +2,7 @@ using ECommerce.Domain.Interfaces;
 using ECommerce.Infrastructure.Data;
 using ECommerce.Infrastructure.Repositories;
 using ECommerce.Infrastructure.Services;
+using ECommerce.Infrastructure.Services.Search;
 using ECommerce.Infrastructure.Configuration;
 using ECommerce.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +49,9 @@ public static class DependencyInjection
         // Cache Service'i ekle
         services.AddMemoryCache();
         services.AddScoped<ICacheService, CacheService>();
+
+        // Search Service'i ekle
+        services.AddScoped<ISearchService, SearchService>();
 
         // Seed Data Service'i ekle
         services.AddHostedService<SeedDataService>();

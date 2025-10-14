@@ -50,6 +50,12 @@ public class UnitOfWork : IUnitOfWork
         WishlistShares = new Repository<WishlistShare>(_context);
         WishlistItemPriceHistories = new Repository<WishlistItemPriceHistory>(_context);
         WishlistItemStockHistories = new Repository<WishlistItemStockHistory>(_context);
+        ProductVariants = new Repository<ProductVariant>(_context);
+        ProductAttributes = new Repository<ProductAttribute>(_context);
+        ProductVariantAttributes = new Repository<ProductVariantAttribute>(_context);
+        ProductProductAttributes = new Repository<ProductProductAttribute>(_context);
+        ProductBrands = new Repository<ProductBrand>(_context);
+        SearchHistories = new Repository<SearchHistory>(_context);
     }
 
     public IRepository<User> Users { get; }
@@ -84,6 +90,12 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<WishlistShare> WishlistShares { get; }
     public IRepository<WishlistItemPriceHistory> WishlistItemPriceHistories { get; }
     public IRepository<WishlistItemStockHistory> WishlistItemStockHistories { get; }
+    public IRepository<ProductVariant> ProductVariants { get; }
+    public IRepository<ProductAttribute> ProductAttributes { get; }
+    public IRepository<ProductVariantAttribute> ProductVariantAttributes { get; }
+    public IRepository<ProductProductAttribute> ProductProductAttributes { get; }
+    public IRepository<ProductBrand> ProductBrands { get; }
+    public IRepository<SearchHistory> SearchHistories { get; }
 
     public async Task<int> SaveChangesAsync()
     {

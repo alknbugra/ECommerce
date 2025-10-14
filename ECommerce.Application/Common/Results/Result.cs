@@ -53,4 +53,9 @@ public class Result<TValue> : Result
 
     public static Result<TValue> ValidationFailure(Error error) =>
         new(default, false, error);
+
+    public TResult Match<TResult>(Func<TValue, TResult> onSuccess, Func<Error, TResult> onFailure)
+    {
+        return IsSuccess ? onSuccess(Value) : onFailure(Error);
+    }
 }

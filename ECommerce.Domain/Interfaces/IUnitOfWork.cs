@@ -168,6 +168,36 @@ public interface IUnitOfWork : IDisposable
     IRepository<WishlistItemStockHistory> WishlistItemStockHistories { get; }
 
     /// <summary>
+    /// Ürün varyantları repository
+    /// </summary>
+    IRepository<ProductVariant> ProductVariants { get; }
+
+    /// <summary>
+    /// Ürün özellikleri repository
+    /// </summary>
+    IRepository<ProductAttribute> ProductAttributes { get; }
+
+    /// <summary>
+    /// Ürün varyant özellikleri repository
+    /// </summary>
+    IRepository<ProductVariantAttribute> ProductVariantAttributes { get; }
+
+    /// <summary>
+    /// Ürün-özellik ilişkisi repository
+    /// </summary>
+    IRepository<ProductProductAttribute> ProductProductAttributes { get; }
+
+    /// <summary>
+    /// Ürün markaları repository
+    /// </summary>
+    IRepository<ProductBrand> ProductBrands { get; }
+
+    /// <summary>
+    /// Arama geçmişi repository
+    /// </summary>
+    IRepository<SearchHistory> SearchHistories { get; }
+
+    /// <summary>
     /// Değişiklikleri kaydet
     /// </summary>
     /// <returns>Etkilenen satır sayısı</returns>

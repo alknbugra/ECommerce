@@ -4,6 +4,7 @@ using ECommerce.Application.DTOs;
 using ECommerce.Application.Features.Products.Commands.CreateProduct;
 using ECommerce.Application.Features.Products.Queries.GetProductById;
 using ECommerce.Application.Features.Products.Queries.GetProducts;
+using ECommerce.API.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Endpoints;
@@ -103,10 +104,10 @@ public static class ProductsEndpoints
         CancellationToken cancellationToken = default)
     {
         var result = await handler.Handle(command, cancellationToken);
-        if (result.IsFailure)
-            return Results.BadRequest(result.Error);
         
-        return Results.CreatedAtRoute("GetProductById", new { id = result.Value.Id }, result.Value);
+        return result.Match(
+            success => Results.CreatedAtRoute("GetProductById", new { id = success.Id }, success),
+            failure => CustomResults.Problem(result));
     }
 
     /// <summary>

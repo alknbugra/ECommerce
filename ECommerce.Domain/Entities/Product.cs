@@ -85,6 +85,16 @@ public class Product : BaseEntity
     public virtual Category Category { get; set; } = null!;
 
     /// <summary>
+    /// Marka ID'si
+    /// </summary>
+    public Guid? BrandId { get; set; }
+
+    /// <summary>
+    /// Marka
+    /// </summary>
+    public virtual ProductBrand? Brand { get; set; }
+
+    /// <summary>
     /// Ürün resimleri
     /// </summary>
     public virtual ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
@@ -93,6 +103,21 @@ public class Product : BaseEntity
     /// Sipariş detayları
     /// </summary>
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
+    /// <summary>
+    /// Ürün varyantları
+    /// </summary>
+    public virtual ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
+
+    /// <summary>
+    /// Ürün özellikleri
+    /// </summary>
+    public virtual ICollection<ProductProductAttribute> Attributes { get; set; } = new List<ProductProductAttribute>();
+
+    /// <summary>
+    /// Ürün değerlendirmeleri
+    /// </summary>
+    public virtual ICollection<ProductReview> Reviews { get; set; } = new List<ProductReview>();
 
     /// <summary>
     /// Ürün aktif mi?

@@ -182,6 +182,36 @@ public class ECommerceDbContext : DbContext
     /// </summary>
     public DbSet<WishlistItemStockHistory> WishlistItemStockHistories { get; set; }
 
+    /// <summary>
+    /// Ürün varyantları
+    /// </summary>
+    public DbSet<ProductVariant> ProductVariants { get; set; }
+
+    /// <summary>
+    /// Ürün özellikleri
+    /// </summary>
+    public DbSet<ProductAttribute> ProductAttributes { get; set; }
+
+    /// <summary>
+    /// Ürün varyant özellikleri
+    /// </summary>
+    public DbSet<ProductVariantAttribute> ProductVariantAttributes { get; set; }
+
+    /// <summary>
+    /// Ürün-özellik ilişkisi
+    /// </summary>
+    public DbSet<ProductProductAttribute> ProductProductAttributes { get; set; }
+
+    /// <summary>
+    /// Ürün markaları
+    /// </summary>
+    public DbSet<ProductBrand> ProductBrands { get; set; }
+
+    /// <summary>
+    /// Arama geçmişi
+    /// </summary>
+    public DbSet<SearchHistory> SearchHistories { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

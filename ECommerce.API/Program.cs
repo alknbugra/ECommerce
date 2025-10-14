@@ -161,6 +161,9 @@ app.MapProductReviewsEndpoints();
 // Wishlist endpoints
 app.MapWishlistsEndpoints();
 
+// Search endpoints
+app.MapSearchEndpoints();
+
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }))
    .WithName("HealthCheck")

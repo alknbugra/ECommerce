@@ -4,6 +4,7 @@ using ECommerce.Application.DTOs;
 using ECommerce.Application.Features.Auth.Commands.Login;
 using ECommerce.Application.Features.Auth.Commands.Register;
 using ECommerce.Application.Features.Auth.Commands.RefreshToken;
+using ECommerce.API.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerce.API.Endpoints;
@@ -69,7 +70,10 @@ public static class AuthEndpoints
         CancellationToken cancellationToken = default)
     {
         var result = await handler.Handle(command, cancellationToken);
-        return Results.Ok(result);
+        
+        return result.Match(
+            success => Results.Ok(success),
+            failure => CustomResults.Problem(result));
     }
 
     /// <summary>
@@ -81,7 +85,10 @@ public static class AuthEndpoints
         CancellationToken cancellationToken = default)
     {
         var result = await handler.Handle(command, cancellationToken);
-        return Results.CreatedAtRoute("Login", result);
+        
+        return result.Match(
+            success => Results.CreatedAtRoute("Login", success),
+            failure => CustomResults.Problem(result));
     }
 
     /// <summary>
@@ -98,7 +105,10 @@ public static class AuthEndpoints
         };
 
         var result = await handler.Handle(command, cancellationToken);
-        return Results.Ok(result);
+        
+        return result.Match(
+            success => Results.Ok(success),
+            failure => CustomResults.Problem(result));
     }
 
     /// <summary>
