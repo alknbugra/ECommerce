@@ -56,6 +56,8 @@ public class UnitOfWork : IUnitOfWork
         ProductProductAttributes = new Repository<ProductProductAttribute>(_context);
         ProductBrands = new Repository<ProductBrand>(_context);
         SearchHistories = new Repository<SearchHistory>(_context);
+        Notifications = new Repository<Notification>(_context);
+        NotificationTemplates = new Repository<NotificationTemplate>(_context);
     }
 
     public IRepository<User> Users { get; }
@@ -96,6 +98,8 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<ProductProductAttribute> ProductProductAttributes { get; }
     public IRepository<ProductBrand> ProductBrands { get; }
     public IRepository<SearchHistory> SearchHistories { get; }
+    public IRepository<Notification> Notifications { get; }
+    public IRepository<NotificationTemplate> NotificationTemplates { get; }
 
     public async Task<int> SaveChangesAsync()
     {

@@ -198,6 +198,16 @@ public interface IUnitOfWork : IDisposable
     IRepository<SearchHistory> SearchHistories { get; }
 
     /// <summary>
+    /// Bildirimler repository
+    /// </summary>
+    IRepository<Notification> Notifications { get; }
+
+    /// <summary>
+    /// Bildirim şablonları repository
+    /// </summary>
+    IRepository<NotificationTemplate> NotificationTemplates { get; }
+
+    /// <summary>
     /// Değişiklikleri kaydet
     /// </summary>
     /// <returns>Etkilenen satır sayısı</returns>

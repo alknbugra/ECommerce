@@ -17,7 +17,6 @@ public static class EmailConfiguration
     {
         // Email servislerini kaydet
         services.AddScoped<IEmailService, SmtpEmailService>();
-        services.AddScoped<INotificationService, NotificationService>();
 
         return services;
     }

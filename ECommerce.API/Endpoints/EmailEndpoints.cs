@@ -126,11 +126,19 @@ public static class EmailEndpoints
     /// </summary>
     private static async Task<IResult> SendUserRegistrationEmail(
         SendUserRegistrationEmailDto dto,
-        INotificationService notificationService,
+        IEmailService emailService,
         CancellationToken cancellationToken)
     {
-        var result = await notificationService.SendUserRegistrationEmailAsync(
-            dto.UserEmail, dto.UserName, cancellationToken);
+        var sendEmailDto = new SendEmailDto
+        {
+            EmailType = "USER_REGISTRATION",
+            ToEmail = dto.UserEmail,
+            Variables = new Dictionary<string, object>
+            {
+                { "UserName", dto.UserName }
+            }
+        };
+        var result = await emailService.SendEmailWithTemplateAsync(sendEmailDto, cancellationToken);
         return Results.Ok(result);
     }
 
@@ -139,11 +147,20 @@ public static class EmailEndpoints
     /// </summary>
     private static async Task<IResult> SendPasswordResetEmail(
         SendPasswordResetEmailDto dto,
-        INotificationService notificationService,
+        IEmailService emailService,
         CancellationToken cancellationToken)
     {
-        var result = await notificationService.SendPasswordResetEmailAsync(
-            dto.UserEmail, dto.UserName, dto.ResetToken, cancellationToken);
+        var sendEmailDto = new SendEmailDto
+        {
+            EmailType = "PASSWORD_RESET",
+            ToEmail = dto.UserEmail,
+            Variables = new Dictionary<string, object>
+            {
+                { "UserName", dto.UserName },
+                { "ResetToken", dto.ResetToken }
+            }
+        };
+        var result = await emailService.SendEmailWithTemplateAsync(sendEmailDto, cancellationToken);
         return Results.Ok(result);
     }
 
@@ -152,10 +169,20 @@ public static class EmailEndpoints
     /// </summary>
     private static async Task<IResult> SendOrderConfirmationEmail(
         OrderDto orderDto,
-        INotificationService notificationService,
+        IEmailService emailService,
         CancellationToken cancellationToken)
     {
-        var result = await notificationService.SendOrderConfirmationEmailAsync(orderDto, cancellationToken);
+        var sendEmailDto = new SendEmailDto
+        {
+            EmailType = "ORDER_CONFIRMATION",
+            ToEmail = orderDto.UserEmail ?? "",
+            Variables = new Dictionary<string, object>
+            {
+                { "OrderNumber", orderDto.OrderNumber },
+                { "TotalAmount", orderDto.TotalAmount }
+            }
+        };
+        var result = await emailService.SendEmailWithTemplateAsync(sendEmailDto, cancellationToken);
         return Results.Ok(result);
     }
 
@@ -164,11 +191,20 @@ public static class EmailEndpoints
     /// </summary>
     private static async Task<IResult> SendPaymentSuccessEmail(
         SendPaymentSuccessEmailDto dto,
-        INotificationService notificationService,
+        IEmailService emailService,
         CancellationToken cancellationToken)
     {
-        var result = await notificationService.SendPaymentSuccessEmailAsync(
-            dto.PaymentDto, dto.OrderDto, cancellationToken);
+        var sendEmailDto = new SendEmailDto
+        {
+            EmailType = "PAYMENT_SUCCESS",
+            ToEmail = dto.OrderDto.UserEmail ?? "",
+            Variables = new Dictionary<string, object>
+            {
+                { "OrderNumber", dto.OrderDto.OrderNumber },
+                { "PaymentAmount", dto.PaymentDto.Amount }
+            }
+        };
+        var result = await emailService.SendEmailWithTemplateAsync(sendEmailDto, cancellationToken);
         return Results.Ok(result);
     }
 
@@ -177,11 +213,21 @@ public static class EmailEndpoints
     /// </summary>
     private static async Task<IResult> SendOrderStatusChangeEmail(
         SendOrderStatusChangeEmailDto dto,
-        INotificationService notificationService,
+        IEmailService emailService,
         CancellationToken cancellationToken)
     {
-        var result = await notificationService.SendOrderStatusChangeEmailAsync(
-            dto.OrderDto, dto.OldStatus, dto.NewStatus, cancellationToken);
+        var sendEmailDto = new SendEmailDto
+        {
+            EmailType = "ORDER_STATUS_CHANGE",
+            ToEmail = dto.OrderDto.UserEmail ?? "",
+            Variables = new Dictionary<string, object>
+            {
+                { "OrderNumber", dto.OrderDto.OrderNumber },
+                { "OldStatus", dto.OldStatus },
+                { "NewStatus", dto.NewStatus }
+            }
+        };
+        var result = await emailService.SendEmailWithTemplateAsync(sendEmailDto, cancellationToken);
         return Results.Ok(result);
     }
 
@@ -190,11 +236,21 @@ public static class EmailEndpoints
     /// </summary>
     private static async Task<IResult> SendShippingInfoEmail(
         SendShippingInfoEmailDto dto,
-        INotificationService notificationService,
+        IEmailService emailService,
         CancellationToken cancellationToken)
     {
-        var result = await notificationService.SendShippingInfoEmailAsync(
-            dto.OrderDto, dto.TrackingNumber, dto.ShippingCompany, cancellationToken);
+        var sendEmailDto = new SendEmailDto
+        {
+            EmailType = "SHIPPING_INFO",
+            ToEmail = dto.OrderDto.UserEmail ?? "",
+            Variables = new Dictionary<string, object>
+            {
+                { "OrderNumber", dto.OrderDto.OrderNumber },
+                { "TrackingNumber", dto.TrackingNumber },
+                { "ShippingCompany", dto.ShippingCompany }
+            }
+        };
+        var result = await emailService.SendEmailWithTemplateAsync(sendEmailDto, cancellationToken);
         return Results.Ok(result);
     }
 

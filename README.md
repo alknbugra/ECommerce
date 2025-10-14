@@ -39,6 +39,7 @@ Modern, ölçeklenebilir ve güvenli bir e-ticaret API'si. Clean Architecture, C
 - **Stok Yönetimi** - Envanter takibi, stok hareketleri, uyarılar
 - **Ödeme Sistemi** - Iyzico entegrasyonu, 3D Secure, webhook
 - **Email Sistemi** - SMTP entegrasyonu, şablon yönetimi
+- **Bildirim Sistemi** - Real-time notifications, SignalR hub
 - **Dosya Yükleme** - Resim yükleme, dosya validasyonu
 - **Kullanıcı Yönetimi** - Profil yönetimi, şifre değiştirme
 - **Adres Yönetimi** - Teslimat ve fatura adresleri
@@ -135,7 +136,8 @@ ECommerce/
 │   │   ├── Wishlists/      # Wishlist management
 │   │   ├── Inventory/      # Stock management
 │   │   ├── ProductReviews/ # Review system
-│   │   └── Emails/         # Email services
+│   │   ├── Emails/         # Email services
+│   │   └── Notifications/  # Notification system
 │   ├── DTOs/               # Data transfer objects (40+ DTOs)
 │   ├── Common/             # Shared application logic
 │   │   ├── Behaviors/      # MediatR behaviors
@@ -154,6 +156,7 @@ ECommerce/
 │   └── Configuration/      # Configuration classes
 └── ECommerce.API/           # Presentation Layer
     ├── Endpoints/          # API endpoints (15+ endpoint groups)
+    ├── Hubs/              # SignalR hubs
     ├── Common/            # Shared API logic
     │   ├── Extensions/    # Extension methods
     │   ├── Middleware/    # Custom middleware
@@ -335,6 +338,16 @@ Uygulama çalıştıktan sonra Swagger UI'ya erişin:
 - `GET /api/email/templates` - Email şablonları
 - `POST /api/email/templates` - Email şablonu oluştur
 
+#### 🔔 Notifications
+
+- `GET /api/notifications` - Bildirimleri listele
+- `GET /api/notifications/{id}` - Bildirim detayı
+- `POST /api/notifications` - Bildirim oluştur
+- `PUT /api/notifications/{id}/read` - Bildirimi okundu olarak işaretle
+- `DELETE /api/notifications/{id}` - Bildirimi sil
+- `GET /api/notifications/templates` - Bildirim şablonları
+- `POST /api/notifications/templates` - Bildirim şablonu oluştur
+
 #### 🔑 Permissions
 
 - `GET /api/permissions` - Yetkileri listele
@@ -496,6 +509,51 @@ curl -X POST "https://localhost:7047/api/email/send" \
       "totalAmount": 125.00
     }
   }'
+```
+
+### 11. Bildirim Oluşturma
+
+```bash
+curl -X POST "https://localhost:7047/api/notifications" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "user-guid",
+    "title": "Yeni Sipariş",
+    "message": "Siparişiniz başarıyla oluşturuldu.",
+    "type": "OrderCreated",
+    "priority": "Medium",
+    "data": {
+      "orderId": "order-guid",
+      "orderNumber": "ORD-001"
+    }
+  }'
+```
+
+### 12. SignalR Hub Bağlantısı (JavaScript)
+
+```javascript
+// SignalR hub'a bağlan
+const connection = new signalR.HubConnectionBuilder()
+  .withUrl("/notificationHub")
+  .build();
+
+// Bağlantıyı başlat
+connection
+  .start()
+  .then(function () {
+    console.log("SignalR bağlantısı kuruldu");
+  })
+  .catch(function (err) {
+    console.error("SignalR bağlantı hatası: " + err.toString());
+  });
+
+// Bildirim dinle
+connection.on("ReceiveNotification", function (notification) {
+  console.log("Yeni bildirim:", notification);
+  // Bildirimi UI'da göster
+  showNotification(notification);
+});
 ```
 
 ## 🔍 OpenSearch Entegrasyonu
@@ -772,7 +830,7 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 - [x] Stok yönetimi ve envanter takibi
 - [x] OpenSearch entegrasyonu
 - [x] Gelişmiş logging ve monitoring
-- [ ] Real-time notifications (SignalR)
+- [x] Real-time notifications (SignalR)
 - [ ] Advanced search (Elasticsearch)
 - [ ] API rate limiting
 - [ ] Multi-language support
@@ -798,14 +856,15 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 - **v1.8.0** - Wishlist yönetimi
 - **v1.9.0** - Stok yönetimi ve envanter takibi
 - **v2.0.0** - Gelişmiş logging, monitoring ve OpenTelemetry
+- **v2.1.0** - Real-time notifications ve SignalR hub
 
 ### Proje İstatistikleri
 
-- **35+ Domain Entities** - Kapsamlı domain modeli
-- **40+ DTOs** - Veri transfer nesneleri
-- **15+ Feature Modules** - CQRS modülleri
-- **15+ API Endpoint Groups** - RESTful API'ler
-- **12+ Enums** - Domain enum'ları
+- **37+ Domain Entities** - Kapsamlı domain modeli
+- **43+ DTOs** - Veri transfer nesneleri
+- **16+ Feature Modules** - CQRS modülleri
+- **16+ API Endpoint Groups** - RESTful API'ler
+- **17+ Enums** - Domain enum'ları
 - **6+ External Services** - Harici servis entegrasyonları
 - **100% Async/Await** - Asenkron programlama
 - **Clean Architecture** - Katmanlı mimari
@@ -813,4 +872,4 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 
 ---
 
-**Son güncelleme**: 2025-10-14
+**Son güncelleme**: 2025-01-14

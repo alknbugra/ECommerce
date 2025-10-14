@@ -212,6 +212,16 @@ public class ECommerceDbContext : DbContext
     /// </summary>
     public DbSet<SearchHistory> SearchHistories { get; set; }
 
+    /// <summary>
+    /// Bildirimler
+    /// </summary>
+    public DbSet<Notification> Notifications { get; set; }
+
+    /// <summary>
+    /// Bildirim şablonları
+    /// </summary>
+    public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -929,6 +939,44 @@ public class ECommerceDbContext : DbContext
             entity.HasIndex(e => e.CreatedAt);
         });
 
+        // Notification entity yapılandırması
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Content).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Data).HasMaxLength(2000);
+            entity.Property(e => e.RelatedEntityType).HasMaxLength(50);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.Priority);
+            entity.HasIndex(e => e.IsRead);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.ExpiresAt);
+        });
+
+        // NotificationTemplate entity yapılandırması
+        modelBuilder.Entity<NotificationTemplate>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.TitleTemplate).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.ContentTemplate).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Variables).HasMaxLength(1000);
+
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.IsActive);
+        });
+
         // Global query filters (soft delete)
         modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Role>().HasQueryFilter(e => !e.IsDeleted);
@@ -964,5 +1012,7 @@ public class ECommerceDbContext : DbContext
         modelBuilder.Entity<WishlistShare>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<WishlistItemPriceHistory>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<WishlistItemStockHistory>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Notification>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<NotificationTemplate>().HasQueryFilter(e => !e.IsDeleted);
     }
 }

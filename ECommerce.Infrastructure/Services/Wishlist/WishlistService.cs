@@ -612,11 +612,14 @@ public class WishlistService : IWishlistService
                 {
                     if (item.EmailNotificationsEnabled && item.Wishlist.EmailNotificationsEnabled)
                     {
-                        await _notificationService.SendPriceChangeNotificationAsync(
-                            item.Wishlist.User.Email,
-                            item.Product.Name,
-                            item.PriceAtTime,
-                            item.PriceAtTime,
+                        await _notificationService.CreateNotificationAsync(
+                            item.Wishlist.UserId,
+                            $"Fiyat Değişikliği - {item.Product.Name}",
+                            $"{item.Product.Name} ürününün fiyatı değişti.",
+                            Domain.Enums.NotificationType.Price,
+                            Domain.Enums.NotificationPriority.Normal,
+                            "Product",
+                            item.ProductId,
                             item.Wishlist.User.FirstName + " " + item.Wishlist.User.LastName);
                     }
                 }
@@ -690,10 +693,14 @@ public class WishlistService : IWishlistService
                 {
                     if (item.EmailNotificationsEnabled && item.Wishlist.EmailNotificationsEnabled)
                     {
-                        await _notificationService.SendStockChangeNotificationAsync(
-                            item.Wishlist.User.Email,
-                            item.Product.Name,
-                            item.WasInStock,
+                        await _notificationService.CreateNotificationAsync(
+                            item.Wishlist.UserId,
+                            $"Stok Değişikliği - {item.Product.Name}",
+                            $"{item.Product.Name} ürününün stok durumu değişti.",
+                            Domain.Enums.NotificationType.Stock,
+                            Domain.Enums.NotificationPriority.Normal,
+                            "Product",
+                            item.ProductId,
                             item.Wishlist.User.FirstName + " " + item.Wishlist.User.LastName);
                     }
                 }

@@ -1,5 +1,6 @@
 using ECommerce.API.Endpoints;
 using ECommerce.API.Common.Extensions;
+using ECommerce.API.Hubs;
 using ECommerce.Infrastructure.Configuration;
 using ECommerce.Application;
 using ECommerce.Infrastructure;
@@ -101,6 +102,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Add SignalR
+builder.Services.AddSignalR();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -163,6 +167,12 @@ app.MapWishlistsEndpoints();
 
 // Search endpoints
 app.MapSearchEndpoints();
+
+// Notification endpoints
+app.MapNotificationsEndpoints();
+
+// SignalR Hub
+app.MapHub<NotificationHub>("/notificationHub");
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }))

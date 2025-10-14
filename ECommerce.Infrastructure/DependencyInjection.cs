@@ -53,6 +53,9 @@ public static class DependencyInjection
         // Search Service'i ekle
         services.AddScoped<ISearchService, SearchService>();
 
+        // Notification Service'i ekle
+        services.AddScoped<INotificationService, NotificationService>();
+
         // Seed Data Service'i ekle
         services.AddHostedService<SeedDataService>();
 
