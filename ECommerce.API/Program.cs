@@ -114,7 +114,7 @@ builder.Services.AddCors(options =>
     // Development ortamı için güvenli CORS
     options.AddPolicy("Development", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "https://localhost:3000", "https://localhost:3001")
+        policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "https://localhost:3000", "https://localhost:3001", "http://localhost:2020", "https://localhost:2021")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials()
@@ -213,6 +213,10 @@ app.MapSearchEndpoints();
 
 // Notification endpoints
 app.MapNotificationsEndpoints();
+
+// Cargo endpoints
+app.MapCargoEndpoints();
+app.MapCargoCompanyEndpoints();
 
 // SignalR Hub
 app.MapHub<NotificationHub>("/notificationHub");

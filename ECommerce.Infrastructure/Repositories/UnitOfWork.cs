@@ -58,6 +58,9 @@ public class UnitOfWork : IUnitOfWork
         SearchHistories = new Repository<SearchHistory>(_context);
         Notifications = new Repository<Notification>(_context);
         NotificationTemplates = new Repository<NotificationTemplate>(_context);
+        Cargos = new CargoRepository(_context);
+        CargoCompanies = new CargoCompanyRepository(_context);
+        CargoTrackings = new CargoTrackingRepository(_context);
     }
 
     public IRepository<User> Users { get; }
@@ -100,6 +103,9 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<SearchHistory> SearchHistories { get; }
     public IRepository<Notification> Notifications { get; }
     public IRepository<NotificationTemplate> NotificationTemplates { get; }
+    public ICargoRepository Cargos { get; }
+    public ICargoCompanyRepository CargoCompanies { get; }
+    public ICargoTrackingRepository CargoTrackings { get; }
 
     public async Task<int> SaveChangesAsync()
     {

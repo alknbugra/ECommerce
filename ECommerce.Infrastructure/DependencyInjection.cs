@@ -56,6 +56,11 @@ public static class DependencyInjection
         // Notification Service'i ekle
         services.AddScoped<INotificationService, NotificationService>();
 
+        // Cargo Services'i ekle
+        services.AddScoped<ICargoService, Services.Cargo.CargoService>();
+        services.AddScoped<ICargoCompanyService, Services.Cargo.CargoCompanyService>();
+        services.AddScoped<ICargoTrackingService, Services.Cargo.CargoTrackingService>();
+
         // Seed Data Service'i ekle
         services.AddHostedService<SeedDataService>();
 

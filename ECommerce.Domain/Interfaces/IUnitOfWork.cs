@@ -208,6 +208,21 @@ public interface IUnitOfWork : IDisposable
     IRepository<NotificationTemplate> NotificationTemplates { get; }
 
     /// <summary>
+    /// Kargo repository
+    /// </summary>
+    ICargoRepository Cargos { get; }
+
+    /// <summary>
+    /// Kargo şirketi repository
+    /// </summary>
+    ICargoCompanyRepository CargoCompanies { get; }
+
+    /// <summary>
+    /// Kargo takip repository
+    /// </summary>
+    ICargoTrackingRepository CargoTrackings { get; }
+
+    /// <summary>
     /// Değişiklikleri kaydet
     /// </summary>
     /// <returns>Etkilenen satır sayısı</returns>

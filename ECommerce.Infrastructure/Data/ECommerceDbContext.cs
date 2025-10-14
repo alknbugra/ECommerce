@@ -222,6 +222,21 @@ public class ECommerceDbContext : DbContext
     /// </summary>
     public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
 
+    /// <summary>
+    /// Kargolar
+    /// </summary>
+    public DbSet<Cargo> Cargos { get; set; }
+
+    /// <summary>
+    /// Kargo şirketleri
+    /// </summary>
+    public DbSet<CargoCompany> CargoCompanies { get; set; }
+
+    /// <summary>
+    /// Kargo takip geçmişi
+    /// </summary>
+    public DbSet<CargoTracking> CargoTrackings { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -1014,5 +1029,92 @@ public class ECommerceDbContext : DbContext
         modelBuilder.Entity<WishlistItemStockHistory>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Notification>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<NotificationTemplate>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Cargo>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<CargoCompany>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<CargoTracking>().HasQueryFilter(e => !e.IsDeleted);
+
+        // Cargo entity yapılandırması
+        modelBuilder.Entity<Cargo>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TrackingNumber).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.SenderName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.SenderAddress).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.ReceiverName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ReceiverAddress).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.ContentDescription).HasMaxLength(500);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.CompanyReferenceNumber).HasMaxLength(100);
+            entity.Property(e => e.TrackingUrl).HasMaxLength(300);
+            entity.Property(e => e.SpecialInstructions).HasMaxLength(500);
+            entity.Property(e => e.Dimensions).HasMaxLength(50);
+            entity.Property(e => e.Weight).HasColumnType("decimal(8,2)");
+            entity.Property(e => e.ShippingCost).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.CustomerShippingCost).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.DeclaredValue).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.InsuranceAmount).HasColumnType("decimal(18,2)");
+
+            entity.HasIndex(e => e.TrackingNumber).IsUnique();
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.CargoCompanyId);
+            entity.HasIndex(e => e.Status);
+
+            entity.HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.CargoCompany)
+                .WithMany(cc => cc.Cargos)
+                .HasForeignKey(e => e.CargoCompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(e => e.TrackingHistory)
+                .WithOne(ct => ct.Cargo)
+                .HasForeignKey(ct => ct.CargoId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // CargoCompany entity yapılandırması
+        modelBuilder.Entity<CargoCompany>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.LogoUrl).HasMaxLength(500);
+            entity.Property(e => e.Website).HasMaxLength(200);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+            entity.Property(e => e.Email).HasMaxLength(100);
+            entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.ApiEndpoint).HasMaxLength(200);
+            entity.Property(e => e.ApiKey).HasMaxLength(200);
+            entity.Property(e => e.TrackingUrlTemplate).HasMaxLength(300);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // CargoTracking entity yapılandırması
+        modelBuilder.Entity<CargoTracking>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.StatusDescription).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Location).HasMaxLength(200);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.Source).HasMaxLength(50);
+            entity.Property(e => e.TrackingData).HasMaxLength(2000);
+
+            entity.HasIndex(e => e.CargoId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.TrackingDate);
+            entity.HasIndex(e => e.IsCurrent);
+
+            entity.HasOne(e => e.Cargo)
+                .WithMany(c => c.TrackingHistory)
+                .HasForeignKey(e => e.CargoId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
